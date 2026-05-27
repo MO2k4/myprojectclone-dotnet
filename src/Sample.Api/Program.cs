@@ -5,4 +5,4 @@ var app = builder.Build();
 
 app.MapGet("/", () => Greeter.Greet("world"));
 
-app.Run();
+await app.RunAsync().ConfigureAwait(false);

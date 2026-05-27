@@ -66,7 +66,7 @@ public static class Greeter
 </Project>
 ```
 
-- [ ] **Step 5: Add `src/Sample.Api/Program.cs`** — minimal API surface that uses `Greeter`.
+- [ ] **Step 5: Add `src/Sample.Api/Program.cs`** — minimal API surface that uses `Greeter`. `await app.RunAsync().ConfigureAwait(false)` rather than `app.Run()` because Sonar's S6966 (prefer RunAsync) plus CA2007 / MA0004 (ConfigureAwait) both fire under the strict ruleset.
 
 ```csharp
 using Sample.Library;
@@ -76,7 +76,7 @@ var app = builder.Build();
 
 app.MapGet("/", () => Greeter.Greet("world"));
 
-app.Run();
+await app.RunAsync().ConfigureAwait(false);
 ```
 
 - [ ] **Step 6: Create the solution file** wiring the two projects.
@@ -220,8 +220,8 @@ git commit -m "feat: enable strict global build defaults (nullable, WaE, AllEnab
 
 - [ ] **Step 2: Restore the solution to verify analyzers attach.**
 
-Run: `dotnet restore && dotnet build`
-Expected: build succeeds; you should see analyzer-suite warnings turn into errors only when violated.
+Run: `dotnet restore`
+Expected: restore succeeds and all 8 analyzer packages appear in `obj/project.assets.json`. The build verification (Task 3 step 3) is deferred until Task 4 adds `.editorconfig`, because StyleCop's SA1633 (file header required) will fail every `.cs` file in the sample until opted out there.
 
 - [ ] **Step 3: Commit.**
 
@@ -270,6 +270,8 @@ dotnet_diagnostic.MA0091.severity = error   # SuppressMessage must have non-empt
 # --- Documented opt-outs (spec §"Per-check opt-out: Layer A") ---
 # CA1303 localization noise — not relevant for an internal template.
 dotnet_diagnostic.CA1303.severity = suggestion
+# SA1633 mandatory file header — internal template; copyright headers add churn without value.
+dotnet_diagnostic.SA1633.severity = none
 ```
 
 - [ ] **Step 2: Verify CA2254 actually fires** by adding (temporarily) a non-literal log call to `Program.cs`:
