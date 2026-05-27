@@ -31,3 +31,6 @@ Thumbs.db
 # Logs / pids
 *.log
 .pids/
+
+# Claude Code (worktrees, transcripts, tool state)
+.claude/
