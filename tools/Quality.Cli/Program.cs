@@ -16,6 +16,11 @@ internal static class Program
 
         var root = new RootCommand("dotnet quality — strict-by-default quality framework for .NET");
         root.SetHandler(() => Console.WriteLine("quality 0.1.0"));
+
+        var statusCmd = new Command("status", "Print the table of every check + enabled/reason");
+        statusCmd.SetHandler(() => Commands.StatusCommand.Run(".quality.toml"));
+        root.AddCommand(statusCmd);
+
         return await root.InvokeAsync(args).ConfigureAwait(false);
     }
 }
