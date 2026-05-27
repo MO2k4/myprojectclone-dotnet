@@ -96,7 +96,7 @@ Every file the plan creates, with one-line responsibility statements. Built-up i
 - `LayeringTests.cs` — Domain must not reference Infrastructure, no cyclic deps, etc.
 
 ### Sample solution
-- `src/Sample.Lib/Sample.Lib.csproj` + `Class1.cs` — illustrative class library.
+- `src/Sample.Library/Sample.Library.csproj` + `Greeter.cs` — illustrative class library.
 - `src/Sample.Api/Sample.Api.csproj` + `Program.cs` — minimal ASP.NET Core API.
 
 ### CI

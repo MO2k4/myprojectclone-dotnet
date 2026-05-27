@@ -31,7 +31,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Sample.Lib\Sample.Lib.csproj" />
+    <ProjectReference Include="..\..\src\Sample.Library\Sample.Library.csproj" />
     <ProjectReference Include="..\..\src\Sample.Api\Sample.Api.csproj" />
   </ItemGroup>
 </Project>
@@ -59,7 +59,7 @@ public class LayeringTests
     [Fact]
     public void Public_types_in_Sample_Lib_are_sealed_or_abstract()
     {
-        var result = Types.InAssembly(typeof(Sample.Lib.Greeter).Assembly)
+        var result = Types.InAssembly(typeof(Sample.Library.Greeter).Assembly)
             .That().ArePublic()
             .Should().BeSealed().Or().BeAbstract()
             .GetResult();
@@ -110,7 +110,7 @@ public sealed class SampleOptions { public string Greeting { get; init; } = ""; 
 ```csharp
 using Microsoft.Extensions.Options;
 using Sample.Api;
-using Sample.Lib;
+using Sample.Library;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<SampleOptions>(builder.Configuration.GetSection("Sample"));

@@ -3,6 +3,6 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Sample.Lib\Sample.Lib.csproj" />
+    <ProjectReference Include="..\Sample.Library\Sample.Library.csproj" />
   </ItemGroup>
 </Project>

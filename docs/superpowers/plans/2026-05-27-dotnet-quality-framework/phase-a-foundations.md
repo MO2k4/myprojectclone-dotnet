@@ -13,8 +13,8 @@ Goal of this phase: end with a solution that fails `dotnet build` when an analyz
 **Files:**
 - Create: `global.json`
 - Create: `MyProjectClone.Dotnet.sln`
-- Create: `src/Sample.Lib/Sample.Lib.csproj`
-- Create: `src/Sample.Lib/Greeter.cs`
+- Create: `src/Sample.Library/Sample.Library.csproj`
+- Create: `src/Sample.Library/Greeter.cs`
 - Create: `src/Sample.Api/Sample.Api.csproj`
 - Create: `src/Sample.Api/Program.cs`
 
@@ -30,7 +30,7 @@ Goal of this phase: end with a solution that fails `dotnet build` when an analyz
 }
 ```
 
-- [ ] **Step 2: Create a placeholder `src/Sample.Lib/Sample.Lib.csproj`** — properties left empty since `Directory.Build.props` (Task 2) will inject them. PackageReferences will move to central management in Task 3.
+- [ ] **Step 2: Create a placeholder `src/Sample.Library/Sample.Library.csproj`** — properties left empty since `Directory.Build.props` (Task 2) will inject them. PackageReferences will move to central management in Task 3.
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
@@ -38,13 +38,17 @@ Goal of this phase: end with a solution that fails `dotnet build` when an analyz
 </Project>
 ```
 
-- [ ] **Step 3: Add `src/Sample.Lib/Greeter.cs`** — a deliberately tiny class that respects nullable and avoids analyzer noise.
+- [ ] **Step 3: Add `src/Sample.Library/Greeter.cs`** — a deliberately tiny class that respects nullable and avoids analyzer noise. XML doc comments are required because `Directory.Build.props` (Task 2) sets `GenerateDocumentationFile=true` and `TreatWarningsAsErrors=true`, which together promote CS1591 to error.
 
 ```csharp
-namespace Sample.Lib;
+namespace Sample.Library;
 
+/// <summary>Returns greeting strings for the sample.</summary>
 public static class Greeter
 {
+    /// <summary>Returns a greeting addressed to <paramref name="name"/>.</summary>
+    /// <param name="name">The name to greet.</param>
+    /// <returns>A greeting in the form <c>Hello, {name}!</c>.</returns>
     public static string Greet(string name) => $"Hello, {name}!";
 }
 ```
@@ -57,7 +61,7 @@ public static class Greeter
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Sample.Lib\Sample.Lib.csproj" />
+    <ProjectReference Include="..\Sample.Library\Sample.Library.csproj" />
   </ItemGroup>
 </Project>
 ```
@@ -65,7 +69,7 @@ public static class Greeter
 - [ ] **Step 5: Add `src/Sample.Api/Program.cs`** — minimal API surface that uses `Greeter`.
 
 ```csharp
-using Sample.Lib;
+using Sample.Library;
 
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
@@ -79,13 +83,12 @@ app.Run();
 
 ```bash
 dotnet new sln -n MyProjectClone.Dotnet
-dotnet sln add src/Sample.Lib/Sample.Lib.csproj src/Sample.Api/Sample.Api.csproj
+dotnet sln add src/Sample.Library/Sample.Library.csproj src/Sample.Api/Sample.Api.csproj
 ```
 
-- [ ] **Step 7: Verify it builds.**
+- [ ] **Step 7: Skip the build check.**
 
-Run: `dotnet build`
-Expected: build succeeds; warnings present (we will turn them into errors next task).
+The placeholder `<PropertyGroup />` in `Sample.Library.csproj` has no `<TargetFramework>`, so `dotnet build` will fail with "Invalid framework identifier ''" until `Directory.Build.props` injects it in Task 2. The build is exercised at the end of Task 2 instead.
 
 - [ ] **Step 8: Commit.**
 
@@ -124,26 +127,34 @@ git commit -m "chore: add SDK pin + sample solution skeleton"
 - [ ] **Step 2: Confirm strictness by introducing a deliberate violation** — add an unused private field to `Greeter.cs`:
 
 ```csharp
-namespace Sample.Lib;
+namespace Sample.Library;
 
+/// <summary>Returns greeting strings for the sample.</summary>
 public static class Greeter
 {
     private static readonly string _unused = "bug bait";
 
+    /// <summary>Returns a greeting addressed to <paramref name="name"/>.</summary>
+    /// <param name="name">The name to greet.</param>
+    /// <returns>A greeting in the form <c>Hello, {name}!</c>.</returns>
     public static string Greet(string name) => $"Hello, {name}!";
 }
 ```
 
 Run: `dotnet build`
-Expected: build FAILS with CA1823 (or equivalent unused-private-field rule) treated as error.
+Expected: build FAILS with CA1823 (or equivalent unused-private-field rule) treated as error. The strict ruleset is wide — expect CA1823 alongside CS0414, CA1802, and possibly other correctness rules. Any of these confirm the strict layer works.
 
 - [ ] **Step 3: Remove the bug bait.**
 
 ```csharp
-namespace Sample.Lib;
+namespace Sample.Library;
 
+/// <summary>Returns greeting strings for the sample.</summary>
 public static class Greeter
 {
+    /// <summary>Returns a greeting addressed to <paramref name="name"/>.</summary>
+    /// <param name="name">The name to greet.</param>
+    /// <returns>A greeting in the form <c>Hello, {name}!</c>.</returns>
     public static string Greet(string name) => $"Hello, {name}!";
 }
 ```
@@ -154,7 +165,7 @@ Expected: build succeeds clean.
 - [ ] **Step 4: Commit.**
 
 ```bash
-git add Directory.Build.props src/Sample.Lib/Greeter.cs
+git add Directory.Build.props src/Sample.Library/Greeter.cs
 git commit -m "feat: enable strict global build defaults (nullable, WaE, AllEnabledByDefault)"
 ```
 
@@ -162,7 +173,7 @@ git commit -m "feat: enable strict global build defaults (nullable, WaE, AllEnab
 
 **Files:**
 - Create: `Directory.Packages.props`
-- Modify: `src/Sample.Lib/Sample.Lib.csproj`
+- Modify: `src/Sample.Library/Sample.Library.csproj`
 - Modify: `src/Sample.Api/Sample.Api.csproj`
 
 - [ ] **Step 1: Create `Directory.Packages.props`** declaring central package management and pinning every analyzer from spec lines 129–141.
@@ -264,7 +275,7 @@ dotnet_diagnostic.CA1303.severity = suggestion
 - [ ] **Step 2: Verify CA2254 actually fires** by adding (temporarily) a non-literal log call to `Program.cs`:
 
 ```csharp
-using Sample.Lib;
+using Sample.Library;
 
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();

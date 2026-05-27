@@ -1,4 +1,4 @@
-using Sample.Lib;
+using Sample.Library;
 
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();

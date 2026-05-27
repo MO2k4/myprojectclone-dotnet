@@ -141,7 +141,7 @@ git commit -m "feat(hooks): add Phase 1 (safety + syntax + gitleaks)"
     rev: v1.9.0
     hooks:
       - id: osv-scanner
-        args: ["--lockfile=src/Sample.Lib/packages.lock.json"]
+        args: ["--lockfile=src/Sample.Library/packages.lock.json"]
 
   - repo: https://github.com/aquasecurity/trivy
     rev: v0.56.2
