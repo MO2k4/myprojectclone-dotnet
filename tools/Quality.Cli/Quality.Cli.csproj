@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>quality</ToolCommandName>
+    <PackageId>dotnet-quality</PackageId>
+    <Version>0.1.0</Version>
+    <RootNamespace>Quality.Cli</RootNamespace>
+    <!-- The tool itself must NOT generate XML docs; suppress noisy CS1591s.
+         SA0001 fires when XML doc analysis is disabled — suppress it too. -->
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);SA0001</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.CommandLine" />
+    <PackageReference Include="Spectre.Console" />
+    <PackageReference Include="Tomlyn" />
+    <PackageReference Include="LibGit2Sharp" />
+    <PackageReference Include="Microsoft.Build.Locator" />
+    <PackageReference Include="Microsoft.Build" ExcludeAssets="runtime" />
+  </ItemGroup>
+</Project>
