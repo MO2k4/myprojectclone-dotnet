@@ -1,0 +1,4 @@
+[
+  { "PackageName": "Newtonsoft.Json", "PackageVersion": "13.0.3", "LicenseType": "MIT" },
+  { "PackageName": "Some.Copyleft",   "PackageVersion": "1.0.0",  "LicenseType": "GPL-3.0" }
+]
