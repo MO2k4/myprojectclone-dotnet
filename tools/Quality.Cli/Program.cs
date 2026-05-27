@@ -1,8 +1,10 @@
 namespace Quality.Cli;
 
 using System.CommandLine;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Build.Locator;
 
+[ExcludeFromCodeCoverage(Justification = "Entry-point wiring; behavior is covered by per-command and per-check unit tests.")]
 internal static class Program
 {
     public static async Task<int> Main(string[] args)
