@@ -1,0 +1,2 @@
+[phase4]
+trivy_fs = { enabled = false }
