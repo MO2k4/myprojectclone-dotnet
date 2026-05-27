@@ -21,6 +21,34 @@ internal static class Program
         statusCmd.SetHandler(() => Commands.StatusCommand.Run(".quality.toml"));
         root.AddCommand(statusCmd);
 
+        var fmt = new Command("fmt", "dotnet format --verify-no-changes");
+        fmt.SetHandler(() => Environment.Exit(Commands.FmtCommand.Run()));
+        root.AddCommand(fmt);
+
+        var check = new Command("check", "Run one named check or 'all'");
+        var idArg = new Argument<string>("id");
+        check.AddArgument(idArg);
+        check.SetHandler(
+            (string id) => Environment.Exit(Commands.CheckCommand.Run(id, ".quality.toml")),
+            idArg);
+        root.AddCommand(check);
+
+        var pr = new Command("pr-check", "Run every phase (fmt, check, build, test)");
+        pr.SetHandler(() => Environment.Exit(Commands.PrCheckCommand.Run()));
+        root.AddCommand(pr);
+
+        var doctor = new Command("doctor", "Diagnose toolchain");
+        doctor.SetHandler(() => Environment.Exit(Commands.DoctorCommand.Run()));
+        root.AddCommand(doctor);
+
+        var install = new Command("install", "Bootstrap a repo with the quality framework");
+        var targetOpt = new Option<string>("--into", () => Directory.GetCurrentDirectory());
+        install.AddOption(targetOpt);
+        install.SetHandler(
+            (string into) => Environment.Exit(Commands.InstallCommand.Run(into)),
+            targetOpt);
+        root.AddCommand(install);
+
         return await root.InvokeAsync(args).ConfigureAwait(false);
     }
 }
