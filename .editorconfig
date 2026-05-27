@@ -1,0 +1,34 @@
+root = true
+
+[*]
+indent_style = space
+end_of_line = lf
+trim_trailing_whitespace = true
+insert_final_newline = true
+charset = utf-8
+
+[*.{csproj,props,targets,sln}]
+indent_size = 2
+
+[*.cs]
+indent_size = 4
+
+# Every Roslyn rule defaults to error via AnalysisMode in Directory.Build.props.
+# Below: explicit pins for high-value rules, plus a few documented opt-outs.
+
+# --- Structured logging (spec §"Structured-logging enforcement") ---
+dotnet_diagnostic.CA2254.severity = error   # template must be literal
+dotnet_diagnostic.CA1727.severity = error   # placeholder PascalCase
+dotnet_diagnostic.CA1848.severity = error   # prefer LoggerMessage source generators
+dotnet_diagnostic.CA2017.severity = error   # template vs argument count mismatch
+dotnet_diagnostic.CA1873.severity = error   # avoid eager .ToString() when level filtered
+
+# --- Justification requirements ---
+dotnet_diagnostic.MA0026.severity = error   # TODO ban (Meziantou)
+dotnet_diagnostic.MA0091.severity = error   # SuppressMessage must have non-empty justification
+
+# --- Documented opt-outs (spec §"Per-check opt-out: Layer A") ---
+# CA1303 localization noise — not relevant for an internal template.
+dotnet_diagnostic.CA1303.severity = suggestion
+# SA1633 mandatory file header — internal template; copyright headers add churn without value.
+dotnet_diagnostic.SA1633.severity = none
