@@ -41,6 +41,14 @@ internal static class Program
         doctor.SetHandler(() => Environment.Exit(Commands.DoctorCommand.Run()));
         root.AddCommand(doctor);
 
+        var install = new Command("install", "Bootstrap a repo with the quality framework");
+        var targetOpt = new Option<string>("--into", () => Directory.GetCurrentDirectory());
+        install.AddOption(targetOpt);
+        install.SetHandler(
+            (string into) => Environment.Exit(Commands.InstallCommand.Run(into)),
+            targetOpt);
+        root.AddCommand(install);
+
         return await root.InvokeAsync(args).ConfigureAwait(false);
     }
 }
