@@ -6,6 +6,8 @@ Strict-by-default quality framework template for ASP.NET Core solutions —
 ## Quick start (greenfield)
 Click **Use this template** on GitHub, then:
 ```bash
+brew install mise      # one-time per machine (or `curl https://mise.run | sh` on Linux)
+mise install           # installs semgrep, pre-commit, jscpd, trivy pinned in .mise.toml
 ./install.sh           # or .\install.ps1 on Windows
 dotnet quality doctor
 dotnet quality pr-check
