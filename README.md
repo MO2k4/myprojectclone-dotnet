@@ -3,14 +3,23 @@
 Strict-by-default quality framework template for ASP.NET Core solutions —
 .NET counterpart to [`myprojectclone-typescript`](https://github.com/MO2k4/myprojectclone-typescript).
 
+## Quick start (greenfield)
+Click **Use this template** on GitHub, then:
+```bash
+./install.sh           # or .\install.ps1 on Windows
+dotnet quality doctor
+dotnet quality pr-check
+```
+
+## Quick start (retrofit existing repo)
+```bash
+curl -sSL https://raw.githubusercontent.com/<owner>/myprojectclone-dotnet/main/install.sh | bash
+```
+
 ## Status
+v1 implementation complete. See [`docs/practices.md`](docs/practices.md) for the full check catalog.
 
-**Pre-implementation.** Design approved; implementation plan pending.
-
-See [`docs/superpowers/specs/2026-05-27-dotnet-quality-framework-design.md`](docs/superpowers/specs/2026-05-27-dotnet-quality-framework-design.md)
-for the full design.
-
-## What this will ship
+## What this ships
 
 - Build-time enforcement via `Directory.Build.props` + `.editorconfig` +
   Roslyn analyzer NuGets (nullable, warnings-as-errors, `AnalysisMode=AllEnabledByDefault`).

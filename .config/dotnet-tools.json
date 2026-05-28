@@ -8,6 +8,13 @@
         "dotnet-project-licenses"
       ],
       "rollForward": false
+    },
+    "dotnet-quality": {
+      "version": "0.1.0",
+      "commands": [
+        "quality"
+      ],
+      "rollForward": false
     }
   }
 }

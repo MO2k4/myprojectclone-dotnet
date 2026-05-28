@@ -44,6 +44,20 @@ public class BypassDirectiveCheckTests
     }
 
     [Fact]
+    public void Handles_multiline_SuppressMessage_attribute_forms()
+    {
+        var ctx = new CheckContext(
+            Path.Combine(AppContext.BaseDirectory, "_fixtures", "bypass-multiline"),
+            new QualityConfig());
+
+        var result = new BypassDirectiveCheck().Run(ctx);
+
+        Assert.False(result.Ok);
+        Assert.Contains(result.Findings, f => f.Contains("bad.cs", StringComparison.Ordinal));
+        Assert.DoesNotContain(result.Findings, f => f.Contains("good.cs", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void Skips_files_under_bin_or_obj_directories()
     {
         var tmp = Directory.CreateTempSubdirectory().FullName;

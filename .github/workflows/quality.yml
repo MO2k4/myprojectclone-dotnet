@@ -20,6 +20,8 @@ jobs:
             ~/.nuget/packages
             ~/.dotnet/tools
           key: ${{ runner.os }}-nuget-${{ hashFiles('.config/dotnet-tools.json', '**/packages.lock.json') }}
+      - name: Pack dotnet-quality for tool restore
+        run: dotnet pack tools/Quality.Cli/Quality.Cli.csproj -o ./artifacts -c Release
       - run: dotnet tool restore
       - uses: actions/setup-python@v5
         with: { python-version: '3.12' }
@@ -37,4 +39,4 @@ jobs:
       - name: Run pr-check inside container
         run: |
           docker run --rm -v "$PWD:/repo" -w /repo quality-tools:pinned \
-            -lc 'dotnet tool restore && dotnet quality pr-check'
+            -lc 'dotnet pack tools/Quality.Cli/Quality.Cli.csproj -o ./artifacts -c Release && dotnet tool restore && dotnet quality pr-check'
