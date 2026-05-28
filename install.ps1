@@ -11,6 +11,10 @@ if (-not (Test-Path .config/dotnet-tools.json)) {
     dotnet new tool-manifest --force
 }
 
+# Pack the local CLI so `dotnet tool restore` can resolve dotnet-quality via the
+# local-artifacts feed configured in NuGet.config.
+dotnet pack tools/Quality.Cli/Quality.Cli.csproj -o .\artifacts -c Release
+
 dotnet tool install --local dotnet-quality --add-source .\artifacts 2>$null
 dotnet tool restore
 dotnet quality install --into (Get-Location)
