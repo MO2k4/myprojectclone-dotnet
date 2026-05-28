@@ -44,17 +44,11 @@ jobs:
   quality-docker:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
-    env:
-      # See quality-native job env for context: license-check uses
-      # dotnet-project-licenses 2.7.1 (net7.0) which needs roll-forward to run
-      # on a 9.0-only SDK. `docker run` does not inherit the host job's env,
-      # so we set it here and re-pass via `-e` below.
-      DOTNET_ROLL_FORWARD: LatestMajor
     steps:
       - uses: actions/checkout@v4
       - name: Build pinned image
         run: docker build -f docker/Dockerfile.quality -t quality-tools:pinned .
       - name: Run pr-check inside container
         run: |
-          docker run --rm -e DOTNET_ROLL_FORWARD -v "$PWD:/repo" -w /repo quality-tools:pinned \
+          docker run --rm -v "$PWD:/repo" -w /repo quality-tools:pinned \
             -lc 'dotnet pack tools/Quality.Cli/Quality.Cli.csproj -o ./artifacts -c Release && dotnet tool restore && dotnet quality pr-check'
