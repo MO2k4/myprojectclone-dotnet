@@ -1,0 +1,40 @@
+name: quality
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  quality-native:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Cache NuGet
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.nuget/packages
+            ~/.dotnet/tools
+          key: ${{ runner.os }}-nuget-${{ hashFiles('.config/dotnet-tools.json', '**/packages.lock.json') }}
+      - run: dotnet tool restore
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install pre-commit==3.8.0
+      - uses: pre-commit/action@v3.0.1
+      - run: dotnet quality pr-check
+
+  quality-docker:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build pinned image
+        run: docker build -f docker/Dockerfile.quality -t quality-tools:pinned .
+      - name: Run pr-check inside container
+        run: |
+          docker run --rm -v "$PWD:/repo" -w /repo quality-tools:pinned \
+            -lc 'dotnet tool restore && dotnet quality pr-check'
