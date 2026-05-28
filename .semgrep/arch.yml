@@ -1,0 +1,10 @@
+rules:
+  - id: domain-must-not-reference-infrastructure
+    languages: [csharp]
+    message: Domain layer must not depend on Infrastructure namespaces.
+    severity: ERROR
+    paths:
+      include:
+        - "src/**/Domain/**"
+    pattern: |
+      using $X.Infrastructure.$Y;

@@ -1,0 +1,9 @@
+title = "myprojectclone-dotnet gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "non-secret placeholders"
+paths = ['''\.env\.example$''', '''docs/.*''']
+regexes = ['''EXAMPLE_TOKEN_PLACEHOLDER''']
