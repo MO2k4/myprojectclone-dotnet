@@ -1,7 +1,12 @@
 # Pinned quality image used by CI hermetic job. Tool versions for trivy,
 # semgrep, pre-commit, and jscpd come from /repo/.mise.toml — keep them
 # aligned there, not here.
-FROM mcr.microsoft.com/dotnet/sdk:9.0.100
+FROM mcr.microsoft.com/dotnet/sdk:9.0.314
+
+# Mirror quality-native's job env: dotnet-project-licenses 2.7.1 ships net7.0
+# with no roll-forward; the container only has 9.0, so this lets it roll
+# forward across majors.
+ENV DOTNET_ROLL_FORWARD=LatestMajor
 
 ARG GITLEAKS_VERSION=8.21.0
 ARG OSV_VERSION=1.9.0
