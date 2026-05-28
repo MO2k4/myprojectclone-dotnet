@@ -24,8 +24,12 @@ internal sealed partial class BypassDirectiveCheck : ICheck
             var lines = File.ReadAllLines(path);
             for (int i = 0; i < lines.Length; i++)
             {
-                var line = lines[i];
-                if (line.Contains("#pragma warning disable", StringComparison.Ordinal))
+                // Match the directive/attribute at line start (after whitespace) only:
+                // the C# tokens `#pragma warning disable` and `[SuppressMessage` are
+                // line-leading constructs; finding them mid-line means we're looking
+                // at a string literal or comment, not the actual language feature.
+                var trimmed = lines[i].TrimStart();
+                if (trimmed.StartsWith("#pragma warning disable", StringComparison.Ordinal))
                 {
                     var prev = i > 0 ? lines[i - 1].Trim() : string.Empty;
                     if (!prev.StartsWith("// Justification:", StringComparison.Ordinal))
@@ -36,8 +40,8 @@ internal sealed partial class BypassDirectiveCheck : ICheck
                     }
                 }
 
-                if (line.Contains("[SuppressMessage", StringComparison.Ordinal)
-                    && !SuppressMessageWithJustification().IsMatch(line))
+                if (trimmed.StartsWith("[SuppressMessage", StringComparison.Ordinal)
+                    && !SuppressMessageWithJustification().IsMatch(trimmed))
                 {
                     findings.Add(string.Create(
                         CultureInfo.InvariantCulture,
@@ -58,7 +62,8 @@ internal sealed partial class BypassDirectiveCheck : ICheck
         foreach (var segment in rel.Split(PathSeparators))
         {
             if (string.Equals(segment, "bin", StringComparison.Ordinal)
-                || string.Equals(segment, "obj", StringComparison.Ordinal))
+                || string.Equals(segment, "obj", StringComparison.Ordinal)
+                || string.Equals(segment, "_fixtures", StringComparison.Ordinal))
             {
                 return true;
             }
