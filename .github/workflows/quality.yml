@@ -8,6 +8,12 @@ on:
 jobs:
   quality-native:
     runs-on: ubuntu-latest
+    env:
+      # dotnet-project-licenses 2.7.1 (license-check hook) ships net7.0 as its
+      # highest TFM with no roll-forward. Runners only have 9.0 from global.json;
+      # this lets the host roll the tool forward across majors. Applies to every
+      # `dotnet` invocation in this job (pre-commit + `dotnet quality pr-check`).
+      DOTNET_ROLL_FORWARD: LatestMajor
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -38,10 +44,6 @@ jobs:
           # to main. CI itself runs on main (push event) so the hook would fire
           # on every merge — skip it server-side.
           SKIP: no-commit-to-branch
-          # dotnet-project-licenses 2.7.1 (license-check hook) ships net7.0 as
-          # its highest TFM with no roll-forward. The runner only has 9.0; this
-          # lets the host roll the tool forward across majors.
-          DOTNET_ROLL_FORWARD: LatestMajor
       - run: dotnet quality pr-check
 
   quality-docker:
