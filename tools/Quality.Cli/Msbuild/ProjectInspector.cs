@@ -11,6 +11,12 @@ internal static class ProjectInspector
         return PackageReferencesCore(csprojPath);
     }
 
+    public static IReadOnlyList<PackageReferenceInfo> PackageReferencesWithMetadata(string csprojPath)
+    {
+        EnsureMsBuildLocatorRegistered();
+        return PackageReferencesWithMetadataCore(csprojPath);
+    }
+
     private static void EnsureMsBuildLocatorRegistered()
     {
         if (!MSBuildLocator.IsRegistered)
@@ -29,6 +35,22 @@ internal static class ProjectInspector
         {
             return project.GetItems("PackageReference")
                 .Select(i => i.EvaluatedInclude)
+                .ToArray();
+        }
+        finally
+        {
+            Microsoft.Build.Evaluation.ProjectCollection.GlobalProjectCollection.UnloadProject(project);
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static PackageReferenceInfo[] PackageReferencesWithMetadataCore(string csprojPath)
+    {
+        var project = new Microsoft.Build.Evaluation.Project(csprojPath);
+        try
+        {
+            return project.GetItems("PackageReference")
+                .Select(i => new PackageReferenceInfo(i.EvaluatedInclude, i.GetMetadataValue("PrivateAssets")))
                 .ToArray();
         }
         finally

@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Suffix match: package name ends with `.Analyzers`. -->
+    <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
+    <!-- Suffix match: package name ends with `.Analyzer` (singular). -->
+    <PackageReference Include="Meziantou.Analyzer" Version="2.0.187" />
+    <!-- PrivateAssets metadata: build-only regardless of name. -->
+    <PackageReference Include="SomePackage" Version="1.0.0" PrivateAssets="all" />
+    <!-- Known build-only test infrastructure. -->
+    <PackageReference Include="coverlet.collector" Version="6.0.2" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+  </ItemGroup>
+</Project>
