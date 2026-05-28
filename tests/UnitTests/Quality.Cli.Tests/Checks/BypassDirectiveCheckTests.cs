@@ -44,6 +44,45 @@ public class BypassDirectiveCheckTests
     }
 
     [Fact]
+    public void Handles_multiline_SuppressMessage_attribute_forms()
+    {
+        var tmp = Directory.CreateTempSubdirectory().FullName;
+        try
+        {
+            var good = """
+namespace X;
+using System.Diagnostics.CodeAnalysis;
+[SuppressMessage(
+    "Performance",
+    "CA1812",
+    Justification = "Reflection.")]
+public class Y {}
+""";
+            var bad = """
+namespace X;
+using System.Diagnostics.CodeAnalysis;
+[SuppressMessage(
+    "Performance",
+    "CA1812",
+    Justification = "")]
+public class Y {}
+""";
+            File.WriteAllText(Path.Combine(tmp, "good.cs"), good);
+            File.WriteAllText(Path.Combine(tmp, "bad.cs"), bad);
+
+            var result = new BypassDirectiveCheck().Run(new CheckContext(tmp, new QualityConfig()));
+
+            Assert.False(result.Ok);
+            Assert.Contains(result.Findings, f => f.Contains("bad.cs", StringComparison.Ordinal));
+            Assert.DoesNotContain(result.Findings, f => f.Contains("good.cs", StringComparison.Ordinal));
+        }
+        finally
+        {
+            Directory.Delete(tmp, recursive: true);
+        }
+    }
+
+    [Fact]
     public void Skips_files_under_bin_or_obj_directories()
     {
         var tmp = Directory.CreateTempSubdirectory().FullName;

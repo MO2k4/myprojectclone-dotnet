@@ -40,12 +40,18 @@ internal sealed partial class BypassDirectiveCheck : ICheck
                     }
                 }
 
-                if (trimmed.StartsWith("[SuppressMessage", StringComparison.Ordinal)
-                    && !SuppressMessageWithJustification().IsMatch(trimmed))
+                if (trimmed.StartsWith("[SuppressMessage", StringComparison.Ordinal))
                 {
-                    findings.Add(string.Create(
-                        CultureInfo.InvariantCulture,
-                        $"{path}:{i + 1}: [SuppressMessage] without non-empty Justification"));
+                    // Accumulate the attribute across lines until parens balance —
+                    // multi-line `[SuppressMessage(... \n Justification = "…")]` forms
+                    // are idiomatic and must be evaluated as one logical unit.
+                    var joined = JoinAttributeLines(lines, i);
+                    if (!SuppressMessageWithJustification().IsMatch(joined))
+                    {
+                        findings.Add(string.Create(
+                            CultureInfo.InvariantCulture,
+                            $"{path}:{i + 1}: [SuppressMessage] without non-empty Justification"));
+                    }
                 }
             }
         }
@@ -55,6 +61,42 @@ internal sealed partial class BypassDirectiveCheck : ICheck
 
     [GeneratedRegex(@"\[SuppressMessage\([^)]*Justification\s*=\s*""[^""]+""", RegexOptions.CultureInvariant, matchTimeoutMilliseconds: 1000)]
     private static partial Regex SuppressMessageWithJustification();
+
+    private static string JoinAttributeLines(string[] lines, int start)
+    {
+        var sb = new System.Text.StringBuilder();
+        int depth = 0;
+        bool seenOpen = false;
+        for (int j = start; j < lines.Length; j++)
+        {
+            if (j > start)
+            {
+                sb.Append(' ');
+            }
+
+            var line = lines[j];
+            sb.Append(line);
+            foreach (var ch in line)
+            {
+                if (ch == '(')
+                {
+                    depth++;
+                    seenOpen = true;
+                }
+                else if (ch == ')')
+                {
+                    depth--;
+                }
+            }
+
+            if (seenOpen && depth <= 0)
+            {
+                break;
+            }
+        }
+
+        return sb.ToString();
+    }
 
     private static bool IsBuildArtifact(string root, string path)
     {
