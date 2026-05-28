@@ -18,7 +18,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0.100
 
 ARG GITLEAKS_VERSION=8.21.0
-ARG TRIVY_VERSION=0.56.2
+ARG TRIVY_VERSION=0.70.0
 ARG SEMGREP_VERSION=1.92.0
 ARG OSV_VERSION=1.9.0
 
@@ -38,7 +38,7 @@ RUN curl -sSL -o /usr/local/bin/osv-scanner \
      https://github.com/google/osv-scanner/releases/download/v${OSV_VERSION}/osv-scanner_linux_amd64 \
  && chmod +x /usr/local/bin/osv-scanner
 
-RUN pip3 install --no-cache-dir semgrep==${SEMGREP_VERSION}
+RUN pip3 install --no-cache-dir --break-system-packages semgrep==${SEMGREP_VERSION}
 
 WORKDIR /repo
 ENTRYPOINT ["bash"]
