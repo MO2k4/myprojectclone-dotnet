@@ -257,4 +257,3 @@ Expected: PASS.
 git add tools/Quality.Cli/Output tests/UnitTests/Quality.Cli.Tests/Output
 git commit -m "feat(cli): add Spectre console wrapper with testable recorder"
 ```
-

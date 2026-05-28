@@ -271,4 +271,3 @@ dotnet test tests/UnitTests/Quality.Cli.Tests
 git add .pre-commit-config.yaml tools/Quality.Cli/Resources/.pre-commit-config.yaml tools/Quality.Cli/Commands/InstallCommand.cs tests/UnitTests/Quality.Cli.Tests/Commands/InstallCommandTests.cs
 git commit -m "feat(hooks): add Phases 5, 7–9 + extend install resource set"
 ```
-

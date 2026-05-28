@@ -330,4 +330,3 @@ dotnet test tests/UnitTests/Quality.Cli.Tests
 git add tools/Quality.Cli tests/UnitTests/Quality.Cli.Tests/Commands/InstallCommandTests.cs
 git commit -m "feat(cli): add install command + SerilogAnalyzer auto-attach"
 ```
-

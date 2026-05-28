@@ -119,4 +119,3 @@ git commit -m "ci: add quality workflow (native + docker)"
 ```
 
 > Verification of CI deferred to first PR — local Phase G smoke covers behavior.
-

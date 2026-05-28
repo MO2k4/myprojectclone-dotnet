@@ -352,4 +352,3 @@ dotnet restore --locked-mode
 Expected: all three succeed silently.
 
 - [ ] **Step 2: No commit.** Phase A is a green baseline; further changes go to subsequent tasks.
-

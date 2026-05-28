@@ -1,0 +1,31 @@
+fail_fast: true
+
+repos:
+  # ─── Phase 1: Safety & syntax ─────────────────────────────────────
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-json
+      - id: check-yaml
+      - id: check-toml
+      - id: check-xml
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: no-commit-to-branch
+        args: [--branch, main]
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.0
+    hooks:
+      - id: gitleaks
+
+  - repo: local
+    hooks:
+      - id: todo-ban-non-cs
+        name: phase1 — TODO/FIXME ban (non-.cs files)
+        entry: bash -c 'rg -n "TODO|FIXME|HACK|XXX" --type-add "doc:*.{md,sh,yml,yaml,json,toml}" -t doc -g "!docs/**" && exit 1 || exit 0'
+        language: system
+        pass_filenames: false
+        always_run: true

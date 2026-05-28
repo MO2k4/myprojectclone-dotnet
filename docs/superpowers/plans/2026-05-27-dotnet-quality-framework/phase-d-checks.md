@@ -659,4 +659,3 @@ public sealed class LicenseCheck : ICheck
 git add .config/dotnet-tools.json tools/Quality.Cli/Checks/LicenseCheck.cs tools/Quality.Cli/Commands/CheckCommand.cs tests/UnitTests/Quality.Cli.Tests/Checks/LicenseCheckTests.cs tests/UnitTests/Quality.Cli.Tests/_fixtures/licenses
 git commit -m "feat(cli): add LicenseCheck (NuGet license denylist)"
 ```
-
