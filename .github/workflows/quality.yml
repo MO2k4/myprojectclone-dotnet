@@ -27,6 +27,11 @@ jobs:
         with: { python-version: '3.12' }
       - run: pip install pre-commit==3.8.0
       - uses: pre-commit/action@v3.0.1
+        env:
+          # `no-commit-to-branch` is a client-side guard against direct commits
+          # to main. CI itself runs on main (push event) so the hook would fire
+          # on every merge — skip it server-side.
+          SKIP: no-commit-to-branch
       - run: dotnet quality pr-check
 
   quality-docker:
