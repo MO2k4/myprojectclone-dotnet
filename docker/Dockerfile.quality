@@ -1,28 +1,39 @@
-# Pinned quality image used by CI hermetic job.
+# Pinned quality image used by CI hermetic job. Tool versions for trivy,
+# semgrep, pre-commit, and jscpd come from /repo/.mise.toml — keep them
+# aligned there, not here.
 FROM mcr.microsoft.com/dotnet/sdk:9.0.100
 
 ARG GITLEAKS_VERSION=8.21.0
-ARG TRIVY_VERSION=0.70.0
-ARG SEMGREP_VERSION=1.92.0
 ARG OSV_VERSION=1.9.0
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        bash curl ca-certificates git python3-pip pre-commit jq \
+        bash curl ca-certificates git python3 python3-pip python3-venv pipx \
+        nodejs npm jq \
     && rm -rf /var/lib/apt/lists/*
 
+# Gitleaks + osv-scanner stay outside mise — pre-commit's `rev:` already
+# pins them in lockstep with local dev. Adding a second pin location would
+# regress the spec's "single source of truth" rule.
 RUN curl -sSL -o /usr/local/bin/gitleaks.tgz \
       https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz \
  && tar -xzf /usr/local/bin/gitleaks.tgz -C /usr/local/bin gitleaks \
  && rm /usr/local/bin/gitleaks.tgz
 
-RUN curl -sSL https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz \
-   | tar -xz -C /usr/local/bin trivy
-
 RUN curl -sSL -o /usr/local/bin/osv-scanner \
      https://github.com/google/osv-scanner/releases/download/v${OSV_VERSION}/osv-scanner_linux_amd64 \
  && chmod +x /usr/local/bin/osv-scanner
 
-RUN pip3 install --no-cache-dir --break-system-packages semgrep==${SEMGREP_VERSION}
+# Mise owns trivy, semgrep, pre-commit, jscpd. PATH must include its shim
+# directory so `pre-commit run` can spawn the pinned scanners. The profile.d
+# drop-in is needed because CI invokes the image via `bash -lc`, and Debian's
+# /etc/profile resets PATH for login shells — overriding any plain ENV PATH.
+RUN curl https://mise.run | sh
+ENV PATH="/root/.local/bin:/root/.local/share/mise/shims:${PATH}"
+RUN printf 'export PATH="/root/.local/bin:/root/.local/share/mise/shims:$PATH"\n' \
+      > /etc/profile.d/mise.sh
 
 WORKDIR /repo
+COPY .mise.toml /repo/.mise.toml
+RUN mise trust /repo/.mise.toml && mise install
+
 ENTRYPOINT ["bash"]
