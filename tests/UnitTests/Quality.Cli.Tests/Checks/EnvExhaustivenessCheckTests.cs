@@ -35,4 +35,19 @@ public class EnvExhaustivenessCheckTests
             Directory.Delete(tmp, recursive: true);
         }
     }
+
+    [Fact]
+    public void Flags_keys_from_appsettings_files_under_project_subdirectories()
+    {
+        var ctx = new CheckContext(
+            Path.Combine(AppContext.BaseDirectory, "_fixtures", "env-multi"),
+            new QualityConfig());
+
+        var result = new EnvExhaustivenessCheck().Run(ctx);
+
+        Assert.False(result.Ok);
+        Assert.Contains(result.Findings, f => f.Contains("API__TIMEOUT", StringComparison.Ordinal));
+        Assert.Contains(result.Findings, f => f.Contains("WORKER__QUEUENAME", StringComparison.Ordinal));
+        Assert.DoesNotContain(result.Findings, f => f.Contains("API__BASEURL", StringComparison.Ordinal));
+    }
 }
