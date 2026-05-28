@@ -137,7 +137,7 @@ repos:
     hooks:
       - id: jscpd
         name: phase7 — duplication (jscpd, C#)
-        entry: jscpd --threshold 0 --reporters console --pattern "src/**/*.cs" .
+        entry: jscpd --threshold 0 --reporters console --pattern "src/**/*.cs" --ignore "**/obj/**,**/bin/**" .
         language: system
         pass_filenames: false
         always_run: true
