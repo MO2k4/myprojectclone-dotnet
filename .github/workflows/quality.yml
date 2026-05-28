@@ -25,7 +25,7 @@ jobs:
       - run: dotnet tool restore
       - uses: actions/setup-python@v5
         with: { python-version: '3.12' }
-      - run: pip install pre-commit==3.8.0 semgrep==1.92.0
+      - run: pip install "setuptools<81" pre-commit==3.8.0 semgrep==1.92.0
       - name: Install external scanners (trivy, jscpd)
         run: |
           # Pinned to match docker/Dockerfile.quality.
