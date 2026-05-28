@@ -17,6 +17,7 @@ public class InstallCommandTests
             Assert.True(File.Exists(Path.Combine(tmp, "Directory.Packages.props")));
             Assert.True(File.Exists(Path.Combine(tmp, ".editorconfig")));
             Assert.True(File.Exists(Path.Combine(tmp, ".quality.toml")));
+            Assert.True(File.Exists(Path.Combine(tmp, ".pre-commit-config.yaml")));
         }
         finally
         {

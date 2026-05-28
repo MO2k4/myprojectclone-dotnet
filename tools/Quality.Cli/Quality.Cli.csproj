@@ -33,5 +33,6 @@
     <EmbeddedResource Include="Resources\Directory.Packages.props" LogicalName="Directory.Packages.props" />
     <EmbeddedResource Include="Resources\.editorconfig" LogicalName=".editorconfig" />
     <EmbeddedResource Include="Resources\.quality.toml" LogicalName=".quality.toml" />
+    <EmbeddedResource Include="Resources\.pre-commit-config.yaml" LogicalName=".pre-commit-config.yaml" />
   </ItemGroup>
 </Project>
