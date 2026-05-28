@@ -1,0 +1,5 @@
+[tools]
+"pipx:semgrep" = "1.157.0"
+"pipx:pre-commit" = "4.6.0"
+"npm:jscpd" = "4.2.4"
+trivy = "0.70.0"

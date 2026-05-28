@@ -29,16 +29,11 @@ jobs:
       - name: Pack dotnet-quality for tool restore
         run: dotnet pack tools/Quality.Cli/Quality.Cli.csproj -o ./artifacts -c Release
       - run: dotnet tool restore
-      - uses: actions/setup-python@v5
-        with: { python-version: '3.12' }
-      - run: pip install "setuptools<81" pre-commit==3.8.0 semgrep==1.92.0
-      - name: Install external scanners (trivy, jscpd)
-        run: |
-          # Pinned to match docker/Dockerfile.quality.
-          curl -sSL https://github.com/aquasecurity/trivy/releases/download/v0.70.0/trivy_0.70.0_Linux-64bit.tar.gz \
-            | sudo tar -xz -C /usr/local/bin trivy
-          sudo npm install -g jscpd@4.0.5
-      - uses: pre-commit/action@v3.0.1
+      - uses: jdx/mise-action@v2
+        with:
+          cache: true
+      - name: Run pre-commit via mise-pinned binary
+        run: mise exec -- pre-commit run --all-files --show-diff-on-failure
         env:
           # `no-commit-to-branch` is a client-side guard against direct commits
           # to main. CI itself runs on main (push event) so the hook would fire

@@ -7,6 +7,7 @@ Strict-by-default .NET quality framework template.
 - **Lowering quality rules is not allowed.** Thresholds and severities must never be relaxed to make a check pass. Fix the code, not the rule.
 
 ## Commands
+- `mise install` — install pinned scanners (semgrep, pre-commit, jscpd, trivy) on a fresh clone.
 - `dotnet quality doctor` — diagnose toolchain.
 - `dotnet quality fmt` — verify formatting.
 - `dotnet quality check <id|all>` — run one or every check.
