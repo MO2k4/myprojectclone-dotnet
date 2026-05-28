@@ -7,8 +7,8 @@
     <Version>0.1.0</Version>
     <RootNamespace>Quality.Cli</RootNamespace>
     <!-- The tool itself must NOT generate XML docs; suppress noisy CS1591s.
-         SA0001 fires when XML doc analysis is disabled — suppress it too.
-         CA1716: 'Error' clashes with VB keyword — irrelevant for a C# tool exe. -->
+      SA0001 fires when XML doc analysis is disabled — suppress it too.
+      CA1716: 'Error' clashes with VB keyword — irrelevant for a C# tool exe. -->
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);SA0001;CA1716</NoWarn>
   </PropertyGroup>
@@ -21,18 +21,18 @@
     <PackageReference Include="System.CommandLine" />
     <PackageReference Include="Spectre.Console" />
     <PackageReference Include="Tomlyn" />
-    <PackageReference Include="LibGit2Sharp" />
     <PackageReference Include="Microsoft.Build.Locator" />
     <PackageReference Include="Microsoft.Build" ExcludeAssets="runtime" />
   </ItemGroup>
 
   <!-- Embedded templates written into a target repo by `quality install`.
-       Explicit LogicalName avoids MSBuild's dotfile mangling (`.editorconfig`
-       would otherwise embed as `Quality.Cli.Resources..editorconfig`). -->
+    Explicit LogicalName avoids MSBuild's dotfile mangling (`.editorconfig`
+    would otherwise embed as `Quality.Cli.Resources..editorconfig`). -->
   <ItemGroup>
     <EmbeddedResource Include="Resources\Directory.Build.props" LogicalName="Directory.Build.props" />
     <EmbeddedResource Include="Resources\Directory.Packages.props" LogicalName="Directory.Packages.props" />
     <EmbeddedResource Include="Resources\.editorconfig" LogicalName=".editorconfig" />
     <EmbeddedResource Include="Resources\.quality.toml" LogicalName=".quality.toml" />
+    <EmbeddedResource Include="Resources\.pre-commit-config.yaml" LogicalName=".pre-commit-config.yaml" />
   </ItemGroup>
 </Project>

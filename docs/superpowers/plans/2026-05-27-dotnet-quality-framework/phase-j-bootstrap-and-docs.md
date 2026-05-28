@@ -189,4 +189,3 @@ git push origin main --tags
 ```
 
 Expected: `quality-native` and `quality-docker` GitHub Actions jobs both succeed.
-

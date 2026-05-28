@@ -111,4 +111,3 @@ Expected: no findings against the current clean sample.
 git add .gitleaks.toml .semgrep
 git commit -m "feat: add gitleaks + semgrep rules (arch, security, logging)"
 ```
-

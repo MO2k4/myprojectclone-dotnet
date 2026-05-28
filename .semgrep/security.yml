@@ -13,6 +13,11 @@ rules:
     severity: ERROR
     pattern: Process.Start($USER_INPUT)
     pattern-not: Process.Start("...")
+    paths:
+      exclude:
+        # Quality.Cli shells out to `dotnet` with hardcoded arguments; the
+        # ProcessStartInfo objects never carry external input.
+        - 'tools/Quality.Cli/**'
 
   - id: reflection-from-name
     languages: [csharp]

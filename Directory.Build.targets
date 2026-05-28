@@ -6,7 +6,7 @@
     <ThresholdType>line,branch</ThresholdType>
     <ThresholdStat>total</ThresholdStat>
     <!-- Skip source-generated files (regex, etc.) and ExcludeFromCodeCoverage-marked entries.
-         Generated state machines have many branches by construction and aren't user code. -->
+      Generated state machines have many branches by construction and aren't user code. -->
     <ExcludeByFile>**/*.g.cs,**/*.Designer.cs,**/obj/**/*.cs</ExcludeByFile>
     <ExcludeByAttribute>GeneratedCodeAttribute,ExcludeFromCodeCoverageAttribute</ExcludeByAttribute>
   </PropertyGroup>

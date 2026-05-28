@@ -11,6 +11,7 @@ internal static class InstallCommand
         ("Directory.Packages.props", "Directory.Packages.props"),
         (".editorconfig", ".editorconfig"),
         (".quality.toml", ".quality.toml"),
+        (".pre-commit-config.yaml", ".pre-commit-config.yaml"),
     ];
 
     public static int Run(string targetRoot)

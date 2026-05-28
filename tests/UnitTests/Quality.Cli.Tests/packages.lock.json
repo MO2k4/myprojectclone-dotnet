@@ -92,11 +92,6 @@
         "resolved": "2.8.2",
         "contentHash": "vm1tbfXhFmjFMUmS4M0J0ASXz3/U5XvXBa6DOQUL3fEz4Vt6YPhv+ESCarx6M6D+9kJkJYZKCNvJMas1+nVfmQ=="
       },
-      "LibGit2Sharp.NativeBinaries": {
-        "type": "Transitive",
-        "resolved": "2.0.323",
-        "contentHash": "Kg+fJGWhGj5qRXG0Ilj4ddhuodGXZg57yhfX6OVUDR0M2DKg/UR42/d74+qv5l1qotc1qJilo/ho7xQnULP6yA=="
-      },
       "Microsoft.Build.Framework": {
         "type": "Transitive",
         "resolved": "17.12.50",
@@ -223,21 +218,11 @@
       "dotnet-quality": {
         "type": "Project",
         "dependencies": {
-          "LibGit2Sharp": "[0.31.0, )",
           "Microsoft.Build": "[17.12.50, )",
           "Microsoft.Build.Locator": "[1.7.8, )",
           "Spectre.Console": "[0.49.1, )",
           "System.CommandLine": "[2.0.0-beta4.22272.1, )",
           "Tomlyn": "[0.17.0, )"
-        }
-      },
-      "LibGit2Sharp": {
-        "type": "CentralTransitive",
-        "requested": "[0.31.0, )",
-        "resolved": "0.31.0",
-        "contentHash": "b3+UfV7LjKMjAHWwl7VawejiOv2gJIC6dTCA/S0puLTHACAA/Oeb5JJmWUQMeyH/T/WR/LaIK8bk2RbdFnrZvg==",
-        "dependencies": {
-          "LibGit2Sharp.NativeBinaries": "[2.0.323]"
         }
       },
       "Microsoft.Build": {

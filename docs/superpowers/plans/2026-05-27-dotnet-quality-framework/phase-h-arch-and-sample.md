@@ -131,4 +131,3 @@ Expected: pass (both keys present in `.env.example`).
 git add src/Sample.Api
 git commit -m "feat(sample): demonstrate IOptions + appsettings + .env.example wiring"
 ```
-

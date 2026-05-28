@@ -65,7 +65,7 @@ internal sealed class LicenseCheck : ICheck
     {
         var args = string.Create(
             CultureInfo.InvariantCulture,
-            $"tool run dotnet-project-licenses -- --input \"{repoRoot}\" --json --output-file \"{jsonPath}\" --include-transitive");
+            $"tool run dotnet-project-licenses -- --input \"{repoRoot}\" --json --outfile \"{jsonPath}\" --include-transitive");
         var psi = new ProcessStartInfo("dotnet", args)
         {
             WorkingDirectory = repoRoot,

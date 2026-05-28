@@ -304,4 +304,3 @@ Expected: prints a Spectre table with every check marked enabled.
 git add tools/ tests/ .quality.toml
 git commit -m "feat(cli): add config validator + status command"
 ```
-

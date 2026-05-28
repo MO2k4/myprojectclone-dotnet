@@ -38,7 +38,8 @@ internal sealed class MaxLinesCheck : ICheck
         foreach (var segment in rel.Split(PathSeparators))
         {
             if (string.Equals(segment, "bin", StringComparison.Ordinal)
-                || string.Equals(segment, "obj", StringComparison.Ordinal))
+                || string.Equals(segment, "obj", StringComparison.Ordinal)
+                || string.Equals(segment, "_fixtures", StringComparison.Ordinal))
             {
                 return true;
             }

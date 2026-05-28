@@ -4,7 +4,7 @@
     <IsTestProject>true</IsTestProject>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <!-- SA0001: XML doc analysis disabled (no docs on test code).
-         CA1707: test methods use snake_case by xUnit convention. -->
+      CA1707: test methods use snake_case by xUnit convention. -->
     <NoWarn>$(NoWarn);SA0001;CA1707</NoWarn>
   </PropertyGroup>
 
@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <!-- Fixture .cs files are test inputs, not test code: exclude from compile and
-       publish as content so tests can read them at runtime. -->
+    publish as content so tests can read them at runtime. -->
   <ItemGroup>
     <Compile Remove="_fixtures/**/*.cs" />
     <None Include="_fixtures/**/*" CopyToOutputDirectory="PreserveNewest" />
