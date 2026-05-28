@@ -33,6 +33,22 @@ public class UnusedNuGetPackagesCheckTests
     }
 
     [Fact]
+    public void Flags_unused_package_even_when_sibling_package_shares_root_namespace()
+    {
+        var ctx = new CheckContext(
+            Path.Combine(AppContext.BaseDirectory, "_fixtures", "unused-nuget-sibling-ns"),
+            new QualityConfig());
+
+        var result = new UnusedNuGetPackagesCheck().Run(ctx);
+
+        Assert.False(result.Ok);
+        Assert.Contains(result.Findings, f => f.Contains("Microsoft.Extensions.Logging", StringComparison.Ordinal));
+        Assert.DoesNotContain(
+            result.Findings,
+            f => f.Contains("Microsoft.Extensions.Configuration", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void Skips_csproj_files_under_relative__fixtures__directories()
     {
         var ctx = new CheckContext(

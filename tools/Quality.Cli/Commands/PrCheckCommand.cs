@@ -1,22 +1,27 @@
 namespace Quality.Cli.Commands;
 
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using Quality.Cli.Process;
 
 [ExcludeFromCodeCoverage(Justification = "Sequences out-of-process steps (fmt/check/build/test); covered by the Phase G pre-commit smoke test, not unit-asserted here.")]
 internal static class PrCheckCommand
 {
+    private static readonly TimeSpan StepTimeout = TimeSpan.FromMinutes(15);
+
     public static int Run()
     {
         var steps = new (string Name, Func<int> Fn)[]
         {
             ("fmt", FmtCommand.Run),
             ("check", () => CheckCommand.Run("all", ".quality.toml")),
-            ("build", () => Shell("dotnet build --no-restore -warnaserror")),
-            ("test", () => Shell("dotnet test --no-build")),
+            ("build", () => Run("dotnet", "build --no-restore -warnaserror")),
+            ("test", () => Run("dotnet", "test --no-build")),
         };
 
+        // Short-circuit on first failure is intentional: pr-check is meant to
+        // mirror the developer's local commit gate, where fixing fmt before
+        // chasing test failures gives a cleaner feedback loop.
         foreach (var (name, fn) in steps)
         {
             Console.WriteLine(string.Create(CultureInfo.InvariantCulture, $"── {name} ──"));
@@ -30,12 +35,10 @@ internal static class PrCheckCommand
         return 0;
     }
 
-    private static int Shell(string cmdline)
+    private static int Run(string exe, string args)
     {
-        var parts = cmdline.Split(' ', 2);
-        var psi = new ProcessStartInfo(parts[0], parts.Length > 1 ? parts[1] : string.Empty);
-        using var p = Process.Start(psi)!;
-        p.WaitForExit();
-        return p.ExitCode;
+        var (exitCode, _, _, timedOut) = ProcessRunner.Run(
+            exe, args, workingDir: null, StepTimeout, captureOutput: false);
+        return timedOut ? -1 : exitCode;
     }
 }

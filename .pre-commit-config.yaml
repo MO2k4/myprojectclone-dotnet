@@ -35,14 +35,14 @@ repos:
     hooks:
       - id: dotnet-format-verify
         name: phase2 — dotnet format (verify-no-changes)
-        entry: dotnet run --project tools/Quality.Cli -- fmt
+        entry: dotnet quality fmt
         language: system
         pass_filenames: false
         always_run: true
 
       - id: ef-migrations-drift
         name: phase2 — EF Core migration drift
-        entry: dotnet run --project tools/Quality.Cli -- check ef-migrations-drift
+        entry: dotnet quality check ef-migrations-drift
         language: system
         pass_filenames: false
         always_run: true
@@ -59,7 +59,7 @@ repos:
     hooks:
       - id: unused-nuget-packages
         name: phase3 — unused NuGet packages
-        entry: dotnet run --project tools/Quality.Cli -- check unused-nuget-packages
+        entry: dotnet quality check unused-nuget-packages
         language: system
         pass_filenames: false
         always_run: true
@@ -67,21 +67,21 @@ repos:
   # ─── Phase 4: Dependency & supply-chain ──────────────────────────
       - id: dotnet-list-vulnerable
         name: phase4 — vulnerable transitive deps
-        entry: bash -c 'dotnet list package --vulnerable --include-transitive | tee /tmp/vuln.txt; ! grep -E "> [A-Za-z]" /tmp/vuln.txt'
+        entry: bash -c 'set -euo pipefail; out=$(mktemp); trap "rm -f $out" EXIT; dotnet list package --vulnerable --include-transitive | tee "$out"; ! grep -E "> [A-Za-z]" "$out"'
         language: system
         pass_filenames: false
         always_run: true
 
       - id: lockfile-integrity
         name: phase4 — lockfile integrity (locked-mode restore)
-        entry: dotnet run --project tools/Quality.Cli -- check lockfile-integrity
+        entry: dotnet quality check lockfile-integrity
         language: system
         pass_filenames: false
         always_run: true
 
       - id: license-check
         name: phase4 — NuGet license denylist (no GPL/AGPL)
-        entry: dotnet run --project tools/Quality.Cli -- check license-check
+        entry: dotnet quality check license-check
         language: system
         pass_filenames: false
         always_run: true
@@ -104,21 +104,21 @@ repos:
   # ─── Phase 5: Static analysis (residual) ─────────────────────────
       - id: max-lines
         name: phase5 — max lines per file
-        entry: dotnet run --project tools/Quality.Cli -- check max-lines
+        entry: dotnet quality check max-lines
         language: system
         pass_filenames: false
         always_run: true
 
       - id: bypass-directive-check
         name: phase5 — bypass directives require justification
-        entry: dotnet run --project tools/Quality.Cli -- check bypass-directive-check
+        entry: dotnet quality check bypass-directive-check
         language: system
         pass_filenames: false
         always_run: true
 
       - id: env-exhaustiveness
         name: phase5 — env-key exhaustiveness
-        entry: dotnet run --project tools/Quality.Cli -- check env-exhaustiveness
+        entry: dotnet quality check env-exhaustiveness
         language: system
         pass_filenames: false
         always_run: true

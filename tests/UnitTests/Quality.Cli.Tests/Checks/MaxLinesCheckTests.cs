@@ -9,7 +9,7 @@ public class MaxLinesCheckTests
     [Fact]
     public void Flags_files_over_threshold()
     {
-        var result = new MaxLinesCheck().Run(Ctx());
+        var result = new MaxLinesCheck().Run(Ctx(threshold: 400));
 
         Assert.False(result.Ok);
         Assert.Contains(result.Findings, f => f.Contains("too_long.cs", StringComparison.Ordinal));
@@ -19,13 +19,7 @@ public class MaxLinesCheckTests
     [Fact]
     public void Passes_when_no_file_exceeds_threshold()
     {
-        var cfg = new QualityConfig
-        {
-            Phase5 = new Phase5 { MaxLines = new MaxLinesEntry { Threshold = 10_000 } },
-        };
-        var ctx = new CheckContext(FixDir(), cfg);
-
-        var result = new MaxLinesCheck().Run(ctx);
+        var result = new MaxLinesCheck().Run(Ctx(threshold: 10_000));
 
         Assert.True(result.Ok);
         Assert.Empty(result.Findings);
@@ -45,12 +39,14 @@ public class MaxLinesCheckTests
             File.WriteAllLines(Path.Combine(binDir, "huge.cs"), Enumerable.Repeat("//", 1000));
             File.WriteAllLines(Path.Combine(objDir, "huge.cs"), Enumerable.Repeat("//", 1000));
 
-            var ctx = new CheckContext(tmp, new QualityConfig
+            var cfg = new QualityConfig
             {
-                Phase5 = new Phase5 { MaxLines = new MaxLinesEntry { Threshold = 10 } },
-            });
-
-            var result = new MaxLinesCheck().Run(ctx);
+                Checks = new(StringComparer.Ordinal)
+                {
+                    ["max-lines"] = new CheckEntry { Threshold = 10 },
+                },
+            };
+            var result = new MaxLinesCheck().Run(new CheckContext(tmp, cfg));
 
             Assert.True(result.Ok);
             Assert.Empty(result.Findings);
@@ -64,8 +60,11 @@ public class MaxLinesCheckTests
     private static string FixDir() =>
         Path.Combine(AppContext.BaseDirectory, "_fixtures", "max-lines");
 
-    private static CheckContext Ctx() => new(FixDir(), new QualityConfig
+    private static CheckContext Ctx(int threshold) => new(FixDir(), new QualityConfig
     {
-        Phase5 = new Phase5 { MaxLines = new MaxLinesEntry { Threshold = 400 } },
+        Checks = new(StringComparer.Ordinal)
+        {
+            ["max-lines"] = new CheckEntry { Threshold = threshold },
+        },
     });
 }

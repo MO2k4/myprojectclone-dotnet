@@ -12,11 +12,11 @@ internal sealed class UnusedNuGetPackagesCheck : ICheck
         ArgumentNullException.ThrowIfNull(ctx);
 
         var findings = new List<string>();
-        foreach (var csproj in EnumerateProjectFiles(ctx.RepoRoot))
+        foreach (var csproj in RepoFileFilter.EnumerateFiles(ctx.RepoRoot, "*.csproj"))
         {
             var projectDir = Path.GetDirectoryName(csproj)!;
             var packages = ProjectInspector.PackageReferencesWithMetadata(csproj);
-            var sources = Directory.EnumerateFiles(projectDir, "*.cs", SearchOption.AllDirectories)
+            var sources = RepoFileFilter.EnumerateFiles(projectDir, "*.cs")
                 .SelectMany(File.ReadAllLines)
                 .ToArray();
 
@@ -27,8 +27,12 @@ internal sealed class UnusedNuGetPackagesCheck : ICheck
                     continue;
                 }
 
-                var root = pkg.Name.Split('.')[0];
-                var probe = $"using {root}";
+                // Probe with the full package id as the namespace prefix. Matches
+                // both `using Pkg.Name;` and any sub-namespace `using Pkg.Name.X;`
+                // via StartsWith. `Split('.')[0]` would collapse Microsoft.* and
+                // System.* packages to the same `using Microsoft` / `using System`
+                // probe, which any sibling package's usings would falsely satisfy.
+                var probe = string.Create(CultureInfo.InvariantCulture, $"using {pkg.Name}");
 
                 // Case-insensitive: NuGet package IDs (e.g. `xunit`) don't always
                 // share casing with their root namespace (e.g. `Xunit`).
@@ -37,31 +41,12 @@ internal sealed class UnusedNuGetPackagesCheck : ICheck
                 {
                     findings.Add(string.Create(
                         CultureInfo.InvariantCulture,
-                        $"{csproj}: PackageReference '{pkg.Name}' has no `using {root}` in any source file"));
+                        $"{csproj}: PackageReference '{pkg.Name}' has no `using {pkg.Name}` in any source file"));
                 }
             }
         }
 
         return new CheckResult(this.Id, findings.Count == 0, findings);
-    }
-
-    // Skip csproj files under `_fixtures/` relative to the scanned root.
-    // The path-segment check is on the RELATIVE path so callers can still
-    // scan inside a fixture directory directly (used by unit tests).
-    private static IEnumerable<string> EnumerateProjectFiles(string root)
-    {
-        var separators = new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
-        foreach (var csproj in Directory.EnumerateFiles(root, "*.csproj", SearchOption.AllDirectories))
-        {
-            var rel = Path.GetRelativePath(root, csproj);
-            var segments = rel.Split(separators, StringSplitOptions.None);
-            if (Array.Exists(segments, s => s.Equals("_fixtures", StringComparison.Ordinal)))
-            {
-                continue;
-            }
-
-            yield return csproj;
-        }
     }
 
     // Skip packages that ship analyzers or build-time MSBuild integration:

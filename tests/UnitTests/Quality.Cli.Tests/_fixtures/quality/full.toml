@@ -1,10 +1,7 @@
-[phase4]
-trivy_fs       = { enabled = true,  severity = "MEDIUM" }
-license_check  = { enabled = true,  denylist = ["GPL-3.0", "AGPL-3.0"] }
+[checks."max-lines"]
+enabled = true
+threshold = 400
 
-[phase5]
-max_lines       = { enabled = true,  threshold = 400 }
-semgrep_logging = { enabled = true }
-
-[phase9]
-coverage = { enabled = true, line = 90, branch = 90 }
+[checks."license-check"]
+enabled = true
+denylist = ["GPL-3.0", "AGPL-3.0"]

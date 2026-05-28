@@ -12,7 +12,34 @@ internal static class CheckCommand
         ArgumentNullException.ThrowIfNull(id);
 
         sink ??= new SpectreConsoleOutput();
-        var cfg = ConfigReader.Read(configPath);
+
+        if (!TryLoadConfig(configPath, sink, out var cfg))
+        {
+            return 2;
+        }
+
+        var toRun = ResolveChecks(id);
+        if (toRun.Count == 0)
+        {
+            sink.Error(string.Create(CultureInfo.InvariantCulture, $"unknown check '{id}'"));
+            return 2;
+        }
+
+        return ExecuteChecks(toRun, cfg, sink);
+    }
+
+    private static bool TryLoadConfig(string configPath, IConsoleOutput sink, out QualityConfig cfg)
+    {
+        try
+        {
+            cfg = ConfigReader.Read(configPath);
+        }
+        catch (ConfigReadException ex)
+        {
+            sink.Error(ex.Message);
+            cfg = new QualityConfig();
+            return false;
+        }
 
         var configErrors = ConfigValidator.Validate(cfg).ToList();
         if (configErrors.Count > 0)
@@ -22,24 +49,32 @@ internal static class CheckCommand
                 sink.Error(e);
             }
 
-            return 2;
+            return false;
         }
 
+        return true;
+    }
+
+    private static IReadOnlyList<ICheck> ResolveChecks(string id) =>
+        string.Equals(id, "all", StringComparison.Ordinal)
+            ? CheckRegistry.All
+            : CheckRegistry.All.Where(c => string.Equals(c.Id, id, StringComparison.Ordinal)).ToArray();
+
+    private static int ExecuteChecks(IReadOnlyList<ICheck> toRun, QualityConfig cfg, IConsoleOutput sink)
+    {
         var ctx = new CheckContext(Directory.GetCurrentDirectory(), cfg);
-        var checks = AllChecks();
-        var toRun = string.Equals(id, "all", StringComparison.Ordinal)
-            ? checks
-            : checks.Where(c => string.Equals(c.Id, id, StringComparison.Ordinal)).ToArray();
-        if (toRun.Length == 0)
-        {
-            sink.Error(string.Create(CultureInfo.InvariantCulture, $"unknown check '{id}'"));
-            return 2;
-        }
-
         var failed = 0;
+
         foreach (var c in toRun)
         {
             sink.Heading(c.Id);
+
+            if (cfg.Checks.TryGetValue(c.Id, out var entry) && !entry.Enabled)
+            {
+                sink.Info(string.Create(CultureInfo.InvariantCulture, $"skipped (disabled: {entry.Reason})"));
+                continue;
+            }
+
             var r = c.Run(ctx);
             if (r.Ok)
             {
@@ -58,15 +93,4 @@ internal static class CheckCommand
 
         return failed == 0 ? 0 : 1;
     }
-
-    private static ICheck[] AllChecks() =>
-    [
-        new MaxLinesCheck(),
-        new BypassDirectiveCheck(),
-        new EnvExhaustivenessCheck(),
-        new UnusedNuGetPackagesCheck(),
-        new EfMigrationsDriftCheck(),
-        new LockfileIntegrityCheck(),
-        new LicenseCheck(),
-    ];
 }

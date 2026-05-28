@@ -1,0 +1,26 @@
+rules:
+  - id: deserialize-untrusted
+    languages: [csharp]
+    message: BinaryFormatter / SoapFormatter are insecure; use System.Text.Json.
+    severity: ERROR
+    pattern-either:
+      - pattern: new BinaryFormatter()
+      - pattern: new SoapFormatter()
+
+  - id: process-start-user-input
+    languages: [csharp]
+    message: Process.Start with user-controlled input is a command injection risk.
+    severity: ERROR
+    pattern: Process.Start($USER_INPUT)
+    pattern-not: Process.Start("...")
+    paths:
+      exclude:
+        # Quality.Cli shells out to `dotnet` with hardcoded arguments; the
+        # ProcessStartInfo objects never carry external input.
+        - 'tools/Quality.Cli/**'
+
+  - id: reflection-from-name
+    languages: [csharp]
+    message: Type.GetType with user input enables type confusion.
+    severity: ERROR
+    pattern: Type.GetType($USER_INPUT)

@@ -58,6 +58,23 @@ public class BypassDirectiveCheckTests
     }
 
     [Fact]
+    public void Accepts_justified_SuppressMessage_with_parens_in_string_args()
+    {
+        var ctx = new CheckContext(
+            Path.Combine(AppContext.BaseDirectory, "_fixtures", "bypass-parens"),
+            new QualityConfig());
+
+        var result = new BypassDirectiveCheck().Run(ctx);
+
+        // good.cs has a justified SuppressMessage whose first arg contains `(parens)` —
+        // the previous regex truncated at the inner `)` and false-flagged it.
+        // bad.cs has the same attribute without a Justification at all.
+        Assert.False(result.Ok);
+        Assert.Contains(result.Findings, f => f.Contains("bad.cs", StringComparison.Ordinal));
+        Assert.DoesNotContain(result.Findings, f => f.Contains("good.cs", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void Skips_files_under_bin_or_obj_directories()
     {
         var tmp = Directory.CreateTempSubdirectory().FullName;

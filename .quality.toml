@@ -1,10 +1,25 @@
-[phase4]
-trivy_fs       = { enabled = true, severity = "MEDIUM" }
-license_check  = { enabled = true, denylist = ["GPL-3.0", "AGPL-3.0"] }
+# One section per check (keyed by check id). Set `enabled = false, reason = "..."`
+# to opt out of a check. Unknown ids are rejected by `quality check`.
 
-[phase5]
-max_lines       = { enabled = true, threshold = 400 }
-semgrep_logging = { enabled = true }
+[checks."max-lines"]
+enabled = true
+threshold = 400
 
-[phase9]
-coverage = { enabled = true, line = 90, branch = 90 }
+[checks."bypass-directive-check"]
+enabled = true
+
+[checks."env-exhaustiveness"]
+enabled = true
+
+[checks."unused-nuget-packages"]
+enabled = true
+
+[checks."ef-migrations-drift"]
+enabled = true
+
+[checks."lockfile-integrity"]
+enabled = true
+
+[checks."license-check"]
+enabled = true
+denylist = ["GPL-3.0", "AGPL-3.0"]

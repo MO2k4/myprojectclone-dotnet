@@ -4,7 +4,7 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>quality</ToolCommandName>
     <PackageId>dotnet-quality</PackageId>
-    <Version>0.1.0</Version>
+    <Version>0.1.1</Version>
     <RootNamespace>Quality.Cli</RootNamespace>
     <!-- The tool itself must NOT generate XML docs; suppress noisy CS1591s.
       SA0001 fires when XML doc analysis is disabled — suppress it too.
@@ -31,8 +31,12 @@
   <ItemGroup>
     <EmbeddedResource Include="Resources\Directory.Build.props" LogicalName="Directory.Build.props" />
     <EmbeddedResource Include="Resources\Directory.Packages.props" LogicalName="Directory.Packages.props" />
+    <EmbeddedResource Include="Resources\Directory.Build.targets" LogicalName="Directory.Build.targets" />
     <EmbeddedResource Include="Resources\.editorconfig" LogicalName=".editorconfig" />
     <EmbeddedResource Include="Resources\.quality.toml" LogicalName=".quality.toml" />
     <EmbeddedResource Include="Resources\.pre-commit-config.yaml" LogicalName=".pre-commit-config.yaml" />
+    <EmbeddedResource Include="Resources\.semgrep\arch.yml" LogicalName="semgrep.arch.yml" />
+    <EmbeddedResource Include="Resources\.semgrep\security.yml" LogicalName="semgrep.security.yml" />
+    <EmbeddedResource Include="Resources\.semgrep\logging.yml" LogicalName="semgrep.logging.yml" />
   </ItemGroup>
 </Project>

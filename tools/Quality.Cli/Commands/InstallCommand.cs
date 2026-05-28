@@ -9,9 +9,13 @@ internal static class InstallCommand
     [
         ("Directory.Build.props", "Directory.Build.props"),
         ("Directory.Packages.props", "Directory.Packages.props"),
+        ("Directory.Build.targets", "Directory.Build.targets"),
         (".editorconfig", ".editorconfig"),
         (".quality.toml", ".quality.toml"),
         (".pre-commit-config.yaml", ".pre-commit-config.yaml"),
+        ("semgrep.arch.yml", ".semgrep/arch.yml"),
+        ("semgrep.security.yml", ".semgrep/security.yml"),
+        ("semgrep.logging.yml", ".semgrep/logging.yml"),
     ];
 
     public static int Run(string targetRoot)
@@ -28,7 +32,8 @@ internal static class InstallCommand
                 Directory.CreateDirectory(dir);
             }
 
-            using var s = asm.GetManifestResourceStream(res)!;
+            using var s = asm.GetManifestResourceStream(res)
+                ?? throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"missing embedded resource '{res}' — packaging defect, see tools/Quality.Cli/Quality.Cli.csproj"));
             using var fs = File.Create(target);
             s.CopyTo(fs);
         }
@@ -42,7 +47,7 @@ internal static class InstallCommand
         foreach (var csproj in Directory.EnumerateFiles(root, "*.csproj", SearchOption.AllDirectories))
         {
             var pkgs = ProjectInspector.PackageReferences(csproj);
-            if (pkgs.Any(p => p.StartsWith("Serilog", StringComparison.Ordinal)))
+            if (pkgs.Any(p => p.StartsWith("Serilog", StringComparison.OrdinalIgnoreCase)))
             {
                 AppendPackageVersionToPackagesProps(root, "SerilogAnalyzer", "0.15.0");
                 return;

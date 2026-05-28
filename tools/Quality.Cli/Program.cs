@@ -18,7 +18,7 @@ internal static class Program
         root.SetHandler(() => Console.WriteLine("quality 0.1.0"));
 
         var statusCmd = new Command("status", "Print the table of every check + enabled/reason");
-        statusCmd.SetHandler(() => Commands.StatusCommand.Run(".quality.toml"));
+        statusCmd.SetHandler(() => Environment.Exit(Commands.StatusCommand.Run(".quality.toml")));
         root.AddCommand(statusCmd);
 
         var fmt = new Command("fmt", "dotnet format --verify-no-changes");

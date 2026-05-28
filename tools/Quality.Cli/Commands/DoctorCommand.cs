@@ -1,13 +1,15 @@
 namespace Quality.Cli.Commands;
 
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using Quality.Cli.Process;
 
 [ExcludeFromCodeCoverage(Justification = "Probes external toolchain via Process; exercised manually via `quality doctor`, not unit-asserted here.")]
 internal static class DoctorCommand
 {
+    private static readonly TimeSpan ProbeTimeout = TimeSpan.FromSeconds(10);
+
     public static int Run()
     {
         var ok = true;
@@ -22,20 +24,19 @@ internal static class DoctorCommand
     {
         try
         {
-            using var p = Process.Start(new ProcessStartInfo(exe, args)
+            // captureOutput: false inherits parent stdio — no pipe-buffer deadlock,
+            // and the user sees the version banner directly under the ✓/✗ summary.
+            var (exitCode, _, _, timedOut) = ProcessRunner.Run(
+                exe, args, workingDir: null, ProbeTimeout, captureOutput: false);
+
+            if (timedOut)
             {
-                RedirectStandardOutput = true,
-                UseShellExecute = false,
-            });
-            if (p is null)
-            {
-                Console.WriteLine(string.Create(CultureInfo.InvariantCulture, $"✗ {exe} not found"));
+                Console.WriteLine(string.Create(CultureInfo.InvariantCulture, $"✗ {exe} {args} timed out"));
                 return false;
             }
 
-            p.WaitForExit();
-            Console.WriteLine(string.Create(CultureInfo.InvariantCulture, $"✓ {exe} {args}"));
-            return p.ExitCode == 0;
+            Console.WriteLine(string.Create(CultureInfo.InvariantCulture, $"{(exitCode == 0 ? '✓' : '✗')} {exe} {args}"));
+            return exitCode == 0;
         }
         catch (Win32Exception)
         {
