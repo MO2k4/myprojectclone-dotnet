@@ -25,7 +25,13 @@ jobs:
       - run: dotnet tool restore
       - uses: actions/setup-python@v5
         with: { python-version: '3.12' }
-      - run: pip install pre-commit==3.8.0
+      - run: pip install pre-commit==3.8.0 semgrep==1.92.0
+      - name: Install external scanners (trivy, jscpd)
+        run: |
+          # Pinned to match docker/Dockerfile.quality.
+          curl -sSL https://github.com/aquasecurity/trivy/releases/download/v0.70.0/trivy_0.70.0_Linux-64bit.tar.gz \
+            | sudo tar -xz -C /usr/local/bin trivy
+          sudo npm install -g jscpd@4.0.5
       - uses: pre-commit/action@v3.0.1
         env:
           # `no-commit-to-branch` is a client-side guard against direct commits
