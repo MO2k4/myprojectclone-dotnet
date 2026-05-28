@@ -29,3 +29,74 @@ repos:
         language: system
         pass_filenames: false
         always_run: true
+
+  # ─── Phase 2: Formatting & schema ────────────────────────────────
+  - repo: local
+    hooks:
+      - id: dotnet-format-verify
+        name: phase2 — dotnet format (verify-no-changes)
+        entry: dotnet run --project tools/Quality.Cli -- fmt
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: ef-migrations-drift
+        name: phase2 — EF Core migration drift
+        entry: dotnet run --project tools/Quality.Cli -- check ef-migrations-drift
+        language: system
+        pass_filenames: false
+        always_run: true
+
+  - repo: https://github.com/editorconfig-checker/editorconfig-checker.python
+    rev: 3.0.3
+    hooks:
+      - id: editorconfig-checker
+        name: phase2 — editorconfig-checker (non-cs files)
+        args: [-exclude, '(bin|obj|node_modules|packages\.lock\.json|\.cs$|\.sln$)']
+
+  # ─── Phase 3: Dead code ──────────────────────────────────────────
+  - repo: local
+    hooks:
+      - id: unused-nuget-packages
+        name: phase3 — unused NuGet packages
+        entry: dotnet run --project tools/Quality.Cli -- check unused-nuget-packages
+        language: system
+        pass_filenames: false
+        always_run: true
+
+  # ─── Phase 4: Dependency & supply-chain ──────────────────────────
+      - id: dotnet-list-vulnerable
+        name: phase4 — vulnerable transitive deps
+        entry: bash -c 'dotnet list package --vulnerable --include-transitive | tee /tmp/vuln.txt; ! grep -E "> [A-Za-z]" /tmp/vuln.txt'
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: lockfile-integrity
+        name: phase4 — lockfile integrity (locked-mode restore)
+        entry: dotnet run --project tools/Quality.Cli -- check lockfile-integrity
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: license-check
+        name: phase4 — NuGet license denylist (no GPL/AGPL)
+        entry: dotnet run --project tools/Quality.Cli -- check license-check
+        language: system
+        pass_filenames: false
+        always_run: true
+
+  - repo: https://github.com/google/osv-scanner
+    rev: v2.3.8
+    hooks:
+      - id: osv-scanner
+        args: ["--lockfile=src/Sample.Library/packages.lock.json"]
+
+  - repo: local
+    hooks:
+      - id: trivy-fs
+        name: phase4 — trivy filesystem scan (MEDIUM+)
+        entry: trivy fs --severity MEDIUM,HIGH,CRITICAL --exit-code 1 .
+        language: system
+        pass_filenames: false
+        always_run: true
