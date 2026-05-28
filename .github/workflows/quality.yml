@@ -12,10 +12,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
-          # global.json pins the 9.0.x SDK. dotnet-project-licenses 2.7.1
-          # (used by the license-check hook) targets up to net7.0, so install
-          # the 8.0 runtime alongside for roll-forward compatibility.
-          dotnet-version: 8.0.x
           global-json-file: global.json
       - name: Cache NuGet
         uses: actions/cache@v4
@@ -36,6 +32,10 @@ jobs:
           # to main. CI itself runs on main (push event) so the hook would fire
           # on every merge — skip it server-side.
           SKIP: no-commit-to-branch
+          # dotnet-project-licenses 2.7.1 (license-check hook) ships net7.0 as
+          # its highest TFM with no roll-forward. The runner only has 9.0; this
+          # lets the host roll the tool forward across majors.
+          DOTNET_ROLL_FORWARD: LatestMajor
       - run: dotnet quality pr-check
 
   quality-docker:
