@@ -10,10 +10,4 @@ public class Justified
     // Justification: documented in ticket #42.
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA9999", Justification = "documented in ticket #42")]
     public void Other() { }
-
-    [System.Diagnostics.CodeAnalysis.SuppressMessage(
-        "Performance",
-        "CA1812:Avoid uninstantiated internal classes",
-        Justification = "Instantiated via reflection by the framework.")]
-    public void MultiLineJustified() { }
 }

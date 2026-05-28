@@ -8,10 +8,4 @@ public class Unjustified
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA9999")]
     public void NoJustification() { }
-
-    [System.Diagnostics.CodeAnalysis.SuppressMessage(
-        "Performance",
-        "CA1812:Avoid uninstantiated internal classes",
-        Justification = "")]
-    public void MultiLineEmptyJustification() { }
 }

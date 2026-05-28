@@ -46,40 +46,15 @@ public class BypassDirectiveCheckTests
     [Fact]
     public void Handles_multiline_SuppressMessage_attribute_forms()
     {
-        var tmp = Directory.CreateTempSubdirectory().FullName;
-        try
-        {
-            var good = """
-namespace X;
-using System.Diagnostics.CodeAnalysis;
-[SuppressMessage(
-    "Performance",
-    "CA1812",
-    Justification = "Reflection.")]
-public class Y {}
-""";
-            var bad = """
-namespace X;
-using System.Diagnostics.CodeAnalysis;
-[SuppressMessage(
-    "Performance",
-    "CA1812",
-    Justification = "")]
-public class Y {}
-""";
-            File.WriteAllText(Path.Combine(tmp, "good.cs"), good);
-            File.WriteAllText(Path.Combine(tmp, "bad.cs"), bad);
+        var ctx = new CheckContext(
+            Path.Combine(AppContext.BaseDirectory, "_fixtures", "bypass-multiline"),
+            new QualityConfig());
 
-            var result = new BypassDirectiveCheck().Run(new CheckContext(tmp, new QualityConfig()));
+        var result = new BypassDirectiveCheck().Run(ctx);
 
-            Assert.False(result.Ok);
-            Assert.Contains(result.Findings, f => f.Contains("bad.cs", StringComparison.Ordinal));
-            Assert.DoesNotContain(result.Findings, f => f.Contains("good.cs", StringComparison.Ordinal));
-        }
-        finally
-        {
-            Directory.Delete(tmp, recursive: true);
-        }
+        Assert.False(result.Ok);
+        Assert.Contains(result.Findings, f => f.Contains("bad.cs", StringComparison.Ordinal));
+        Assert.DoesNotContain(result.Findings, f => f.Contains("good.cs", StringComparison.Ordinal));
     }
 
     [Fact]
