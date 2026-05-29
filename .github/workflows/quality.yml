@@ -8,6 +8,11 @@ on:
 jobs:
   quality-native:
     runs-on: ubuntu-latest
+    # Bound runaway jobs: the default GitHub Actions timeout is 360 min (6h). A
+    # hung mise cache fetch, a stalled `dotnet restore --locked-mode`, or an
+    # MSBuild worker deadlock (the risk MSBUILDDISABLENODEREUSE=1 mitigates)
+    # should fail the job in 20 min, not consume a 6h budget and block the queue.
+    timeout-minutes: 20
     env:
       # dotnet-project-licenses 2.7.1 (license-check hook) ships net7.0 as its
       # highest TFM with no roll-forward. Runners only have 9.0 from global.json;
@@ -43,6 +48,9 @@ jobs:
 
   quality-docker:
     runs-on: ubuntu-latest
+    # Same runaway-job guard as quality-native; the image build makes this job
+    # slower but 20 min is still ample headroom over a healthy run.
+    timeout-minutes: 20
     if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
