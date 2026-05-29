@@ -22,6 +22,6 @@ public class LayeringTests
             .That().ArePublic()
             .Should().BeSealed().Or().BeAbstract()
             .GetResult();
-        Assert.True(result.IsSuccessful);
+        Assert.True(result.IsSuccessful, string.Join(", ", result.FailingTypeNames ?? Array.Empty<string>()));
     }
 }
