@@ -34,23 +34,10 @@ internal sealed class LockfileIntegrityCheck : ICheck
     // actually drifted. Split both streams into individual lines so each shows on its own
     // row. Pure + internal so it can be unit-asserted without shelling out (the Run path
     // stays ExcludeFromCodeCoverage).
-    internal static IReadOnlyList<string> SplitStreamsIntoLines(string stdout, string stderr)
-    {
-        var findings = new List<string>();
-        AddNonEmptyLines(findings, stdout);
-        AddNonEmptyLines(findings, stderr);
-        return findings;
-    }
-
-    private static void AddNonEmptyLines(List<string> findings, string stream)
-    {
-        foreach (var line in stream.Split('\n'))
-        {
-            var trimmed = line.TrimEnd('\r');
-            if (!string.IsNullOrWhiteSpace(trimmed))
-            {
-                findings.Add(trimmed);
-            }
-        }
-    }
+    internal static IReadOnlyList<string> SplitStreamsIntoLines(string stdout, string stderr) =>
+        new[] { stdout, stderr }
+            .SelectMany(stream => stream.Split('\n'))
+            .Select(line => line.TrimEnd('\r'))
+            .Where(line => !string.IsNullOrWhiteSpace(line))
+            .ToList();
 }
