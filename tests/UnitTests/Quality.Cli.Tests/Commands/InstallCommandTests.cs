@@ -112,4 +112,140 @@ public class InstallCommandTests
             Directory.Delete(tmp, recursive: true);
         }
     }
+
+    [Fact]
+    public void Install_rerun_without_force_preserves_user_customization()
+    {
+        var tmp = Directory.CreateTempSubdirectory().FullName;
+        try
+        {
+            Assert.Equal(0, InstallCommand.Run(tmp));
+
+            var customized = Path.Combine(tmp, ".semgrep", "security.yml");
+            File.WriteAllText(customized, "# my custom rule\n");
+
+            Assert.Equal(0, InstallCommand.Run(tmp));
+
+            Assert.Equal("# my custom rule\n", File.ReadAllText(customized));
+        }
+        finally
+        {
+            Directory.Delete(tmp, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Install_with_force_overwrites_user_customization()
+    {
+        var tmp = Directory.CreateTempSubdirectory().FullName;
+        try
+        {
+            Assert.Equal(0, InstallCommand.Run(tmp));
+
+            var customized = Path.Combine(tmp, ".semgrep", "security.yml");
+            File.WriteAllText(customized, "# my custom rule\n");
+
+            Assert.Equal(0, InstallCommand.Run(tmp, force: true));
+
+            Assert.NotEqual("# my custom rule\n", File.ReadAllText(customized));
+        }
+        finally
+        {
+            Directory.Delete(tmp, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Install_appends_once_when_comment_contains_closing_project_tag()
+    {
+        var tmp = Directory.CreateTempSubdirectory().FullName;
+        try
+        {
+            // Pre-create a custom packages props with a </Project> inside a comment.
+            // force=false means install skips (preserves) it, then the attach step runs on it.
+            var props = """
+                <Project>
+                  <!-- </Project> copied from root -->
+                  <ItemGroup>
+                    <PackageVersion Include="Serilog" Version="3.1.1" />
+                  </ItemGroup>
+                </Project>
+                """;
+            File.WriteAllText(Path.Combine(tmp, "Directory.Packages.props"), props);
+
+            var projDir = Path.Combine(tmp, "Sample");
+            Directory.CreateDirectory(projDir);
+            var csproj = """
+                <Project Sdk="Microsoft.NET.Sdk">
+                  <ItemGroup>
+                    <PackageReference Include="Serilog" Version="3.1.1" />
+                  </ItemGroup>
+                </Project>
+                """;
+            File.WriteAllText(Path.Combine(projDir, "Sample.csproj"), csproj);
+
+            Assert.Equal(0, InstallCommand.Run(tmp));
+
+            var result = File.ReadAllText(Path.Combine(tmp, "Directory.Packages.props"));
+            var occurrences = result.Split("SerilogAnalyzer", StringSplitOptions.None).Length - 1;
+            Assert.Equal(1, occurrences);
+            Assert.EndsWith("</Project>", result.TrimEnd(), StringComparison.Ordinal);
+            System.Xml.Linq.XDocument.Parse(result);
+        }
+        finally
+        {
+            Directory.Delete(tmp, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Install_throws_when_packages_props_has_no_closing_project_tag()
+    {
+        var tmp = Directory.CreateTempSubdirectory().FullName;
+        try
+        {
+            // Malformed props: no closing </Project>. force=false preserves it.
+            File.WriteAllText(
+                Path.Combine(tmp, "Directory.Packages.props"),
+                "<Project>\n  <ItemGroup />\n");
+
+            var projDir = Path.Combine(tmp, "Sample");
+            Directory.CreateDirectory(projDir);
+            var csproj = """
+                <Project Sdk="Microsoft.NET.Sdk">
+                  <ItemGroup>
+                    <PackageReference Include="Serilog" Version="3.1.1" />
+                  </ItemGroup>
+                </Project>
+                """;
+            File.WriteAllText(Path.Combine(projDir, "Sample.csproj"), csproj);
+
+            var ex = Assert.Throws<InvalidOperationException>(() => InstallCommand.Run(tmp));
+            Assert.Contains("Directory.Packages.props", ex.Message, StringComparison.Ordinal);
+        }
+        finally
+        {
+            Directory.Delete(tmp, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Install_cleans_up_temp_file_when_a_write_fails()
+    {
+        var tmp = Directory.CreateTempSubdirectory().FullName;
+        try
+        {
+            // A directory occupying a target file path makes the atomic File.Move fail.
+            // The catch block must delete the temp sidecar and rethrow.
+            Directory.CreateDirectory(Path.Combine(tmp, "Directory.Build.props"));
+
+            Assert.ThrowsAny<IOException>(() => InstallCommand.Run(tmp));
+
+            Assert.False(File.Exists(Path.Combine(tmp, "Directory.Build.props.tmp-install")));
+        }
+        finally
+        {
+            Directory.Delete(tmp, recursive: true);
+        }
+    }
 }
