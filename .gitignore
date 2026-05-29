@@ -35,3 +35,6 @@ Thumbs.db
 
 # Claude Code (worktrees, transcripts, tool state)
 .claude/
+
+# Local review-findings ledger (not checked in)
+findings.json
