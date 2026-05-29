@@ -9,7 +9,7 @@ FROM mcr.microsoft.com/dotnet/sdk:9.0.314
 ENV DOTNET_ROLL_FORWARD=LatestMajor
 
 ARG GITLEAKS_VERSION=8.21.0
-ARG OSV_VERSION=1.9.0
+ARG OSV_VERSION=2.3.8
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         bash curl ca-certificates git python3 python3-pip python3-venv pipx \
