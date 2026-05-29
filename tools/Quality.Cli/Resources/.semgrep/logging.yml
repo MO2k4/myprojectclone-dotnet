@@ -5,8 +5,20 @@ rules:
       Log call references a sensitive identifier (password/token/etc.).
       Redact, hash, or omit before logging.
     severity: ERROR
-    pattern-regex: |
-      \.Log(Trace|Debug|Information|Warning|Error|Critical)\([^)]*\b(?i:password|secret|token|apikey|api_key|bearer|authorization|credit.?card|ssn|pii)\b
+    # Match the log call structurally so semgrep balances the argument list's
+    # parens, then AND a keyword regex. A flat `\.Log...\([^)]*\b(keyword)\b`
+    # regex truncated at the first ')' inside the message (e.g. "failed (attempt
+    # #{n}): password ..."), and as a `|` block scalar it carried a trailing
+    # newline that made it match nothing at all.
+    patterns:
+      - pattern-either:
+          - pattern: $LOGGER.LogTrace(...)
+          - pattern: $LOGGER.LogDebug(...)
+          - pattern: $LOGGER.LogInformation(...)
+          - pattern: $LOGGER.LogWarning(...)
+          - pattern: $LOGGER.LogError(...)
+          - pattern: $LOGGER.LogCritical(...)
+      - pattern-regex: '(?i)\b(password|secret|token|apikey|api_key|bearer|authorization|credit.?card|ssn|pii)\b'
 
   - id: console-write-outside-allowed
     languages: [csharp]
