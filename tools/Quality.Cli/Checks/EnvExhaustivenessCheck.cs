@@ -11,17 +11,40 @@ internal sealed class EnvExhaustivenessCheck : ICheck
     {
         ArgumentNullException.ThrowIfNull(ctx);
 
-        var settingsPath = Path.Combine(ctx.RepoRoot, "appsettings.json");
         var envExample = Path.Combine(ctx.RepoRoot, ".env.example");
-        if (!File.Exists(settingsPath) || !File.Exists(envExample))
+        if (!File.Exists(envExample))
         {
             return new CheckResult(this.Id, true, Array.Empty<string>());
         }
 
-        using var doc = JsonDocument.Parse(File.ReadAllText(settingsPath));
-        var settingsKeys = FlattenJson(doc.RootElement, string.Empty)
-            .Select(k => k.Replace(":", "__", StringComparison.Ordinal).ToUpperInvariant())
-            .ToHashSet(StringComparer.Ordinal);
+        // appsettings.json is conventionally per-project (src/<Proj>/appsettings.json),
+        // not repo-root. Walk every appsettings.json the file filter exposes and union
+        // their flattened keys. RepoFileFilter excludes bin/obj/_fixtures so a target
+        // repo's build output is not scanned.
+        var settingsFiles = RepoFileFilter
+            .EnumerateFiles(ctx.RepoRoot, "appsettings.json")
+            .ToList();
+        if (settingsFiles.Count == 0)
+        {
+            return new CheckResult(this.Id, true, Array.Empty<string>());
+        }
+
+        var settingsKeys = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var settingsPath in settingsFiles)
+        {
+            using var doc = JsonDocument.Parse(File.ReadAllText(settingsPath));
+            foreach (var key in FlattenJson(doc.RootElement, string.Empty))
+            {
+                if (key.Length == 0)
+                {
+                    // Non-object root (array, string, number) yields an empty prefix —
+                    // skip rather than emit a spurious finding for an empty key.
+                    continue;
+                }
+
+                settingsKeys.Add(key.Replace(":", "__", StringComparison.Ordinal).ToUpperInvariant());
+            }
+        }
 
         var envKeys = File.ReadAllLines(envExample)
             .Where(l => !string.IsNullOrWhiteSpace(l) && !l.TrimStart().StartsWith('#'))

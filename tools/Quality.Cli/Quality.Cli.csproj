@@ -4,7 +4,7 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>quality</ToolCommandName>
     <PackageId>dotnet-quality</PackageId>
-    <Version>0.1.1</Version>
+    <Version>0.1.2</Version>
     <RootNamespace>Quality.Cli</RootNamespace>
     <!-- The tool itself must NOT generate XML docs; suppress noisy CS1591s.
       SA0001 fires when XML doc analysis is disabled — suppress it too.
