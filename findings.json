@@ -1,0 +1,152 @@
+[
+    {
+      "id": 1,
+      "status": "resolved",
+      "resolved_by": "044fbf4 fix(install): drop stale LibGit2Sharp from embedded Directory.Packages.props",
+      "file": "tools/Quality.Cli/Resources/Directory.Packages.props",
+      "line": 31,
+      "summary": "Embedded template still pins LibGit2Sharp 0.31.0 that root Directory.Packages.props removed; `quality install` writes a stale unused dependency into every target repo.",
+      "failure_scenario": "`dotnet quality install --into <repo>` copies this embedded file as the target's Directory.Packages.props. Diff vs root shows LibGit2Sharp is in embedded copy only. Target repo then enforces `<PackageVersion Include=\"LibGit2Sharp\" Version=\"0.31.0\" />` it does not use — and since `unused-nuget-packages` is one of the framework's
+  own checks, an installer-bootstrapped repo cannot pass the framework's own rules until the user manually deletes the line."
+    },
+    {
+      "id": 2,
+      "status": "resolved",
+      "resolved_by": "ce01327 fix(checks): env-exhaustiveness must scan appsettings.json per project",
+      "file": "tools/Quality.Cli/Checks/EnvExhaustivenessCheck.cs",
+      "line": 14,
+      "summary": "Check looks for `appsettings.json` only at `ctx.RepoRoot`, but in real .NET solutions it sits inside each project (e.g., `src/Sample.Api/appsettings.json`).",
+      "failure_scenario": "Run on this repo: `Path.Combine(ctx.RepoRoot, \"appsettings.json\")` resolves to the repo root, where no such file exists. Line 16 returns Ok=true with empty findings. The actual `src/Sample.Api/appsettings.json` is never inspected. The check is a silent no-op for any project that follows the standard
+  `src/<ProjectName>/appsettings.json` layout, including this one. Tests in `EnvExhaustivenessCheckTests.cs:13` only pass because the fixture places appsettings.json at the fixture root, masking the bug."
+    },
+    {
+      "id": 3,
+      "status": "resolved",
+      "resolved_by": "1e7887a fix(tests): add missing [CollectionDefinition] for CurrentDirectory",
+      "file": "tests/UnitTests/Quality.Cli.Tests/Commands/CheckCommandTests.cs",
+      "line": 7,
+      "summary": "`[Collection(\"CurrentDirectory\")]` references a collection with no matching `[CollectionDefinition]` anywhere in the test assembly; xUnit silently treats it as a no-op.",
+      "failure_scenario": "Tests in this class mutate process-wide state via `Directory.SetCurrentDirectory` (lines 145, 150). The `[Collection]` attribute is meant to serialize them, but `grep -r CollectionDefinition tests/` returns nothing. Under parallel test execution, two test classes that both touch CWD race: one thread runs `WithCwd(path1)` while
+  another reads `Directory.GetCurrentDirectory()` and sees `path1` instead of its own. Result: flaky failures (`appsettings.json not found`, `_fixtures/max-lines/ok.cs not found`) that only reproduce under load."
+    },
+    {
+      "id": 4,
+      "status": "resolved",
+      "resolved_by": "81f1117 fix(install): splice before last </Project>, throw when absent (#7, #11)",
+      "file": "tools/Quality.Cli/Commands/InstallCommand.cs",
+      "line": 37,
+      "summary": "`File.Create(target)` truncates without warning, silently destroying any user customization to `.semgrep/*.yml`, `.quality.toml`, `Directory.Build.props`, etc.",
+      "failure_scenario": "User runs `dotnet quality install --into <repo>` once, then customizes `.semgrep/security.yml` to add a project-specific rule, then runs `quality install` again to pick up a framework update — the customized rules are silently overwritten with the embedded template. No `--force` flag, no prompt, no `.bak` file, no skip-if-exists
+  guard. The agent's mental model (this is idempotent) doesn't match the implementation (this overwrites)."
+    },
+    {
+      "id": 5,
+      "status": "open",
+      "resolved_by": null,
+      "file": ".github/workflows/quality.yml",
+      "line": 9,
+      "summary": "Both jobs lack `timeout-minutes:`; default GitHub Actions timeout is 360 minutes (6 hours).",
+      "failure_scenario": "If `mise-action` cache fetch hangs, `dotnet restore --locked-mode` stalls on a stale NuGet feed, or `dotnet quality pr-check` hits a deadlock in MSBuild worker nodes (the very risk `MSBUILDDISABLENODEREUSE=1` in ProcessRunner.cs:64 was added to mitigate), the job consumes a full 6-hour budget before being killed — blocking the PR
+  queue and spending workflow minutes."
+    },
+    {
+      "id": 6,
+      "status": "open",
+      "resolved_by": null,
+      "file": ".gitleaks.toml",
+      "line": 9,
+      "summary": "Allowlist regex `EXAMPLE_TOKEN_PLACEHOLDER` is unanchored and applies globally — any file containing that substring on a line is fully whitelisted.",
+      "failure_scenario": "The `[allowlist]` block at line 6-9 sets both `paths` and `regexes` at top level, which gitleaks treats as global. A developer who pastes a real secret into a file and adds `// EXAMPLE_TOKEN_PLACEHOLDER for testing` on the same line skips detection entirely. The intended use (annotating intentional placeholders in `.env.example`) is
+   already covered by the `paths` entry — the `regexes` line broadens the allowlist far beyond `.env.example`. Scope to a specific rule (`[[rules.allowlist]]`) or anchor + scope to paths."
+    },
+    {
+      "id": 7,
+      "status": "resolved",
+      "resolved_by": "81f1117 fix(install): splice before last </Project>, throw when absent (#7, #11)",
+      "file": "tools/Quality.Cli/Commands/InstallCommand.cs",
+      "line": 41,
+      "summary": "`AutoAttachSerilogAnalyzer` runs after all writes; an exception there propagates out of `Run` with all template files already on disk — partial install with no rollback.",
+      "failure_scenario": "After the resource loop writes 9 files (lines 26-39), line 41 calls `AutoAttachSerilogAnalyzer`. If a target repo has a malformed `Directory.Packages.props` (no `</Project>`), `File.ReadAllText` succeeds but the subsequent `text.Replace(\"</Project>\", ...)` is a no-op — silent failure, the package is never pinned. If
+  `File.WriteAllText` throws (read-only filesystem, permission), the exception bubbles up to `Environment.Exit(Commands.InstallCommand.Run(...))` in Program.cs:48 as an uncaught CLR exit, but the 9 template files are already on disk. User sees a stack trace and a half-installed repo with no instructions."
+    },
+    {
+      "id": 8,
+      "status": "open",
+      "resolved_by": null,
+      "file": ".semgrep/logging.yml",
+      "line": 9,
+      "summary": "Sensitive-data regex `credit.?card` only matches a single-char separator and the whole pattern is broken by any `)` inside log arguments because of `[^)]*`.",
+      "failure_scenario": "Pattern `\\.Log...\\([^)]*\\b(?i:password|...|credit.?card|...)\\b`. `[^)]*` stops at the first `)`, so `_logger.LogError(\"User {id} authentication failed (login attempt #{attempt}): password was {pw}\", id, attempt, pw)` never matches because the `)` after `#{attempt}` ends the `[^)]*` greedy span before reaching `password`. Many
+  real log calls contain parentheses inside the message argument. `credit.?card` also misses `credit_card` only via `.` matching `_` (works), but `credit  card` (double space) and `credit-card` (works) — true gap is the `[^)]*` interaction with realistic log payloads."
+    },
+    {
+      "id": 9,
+      "status": "open",
+      "resolved_by": null,
+      "file": "tools/Quality.Cli/Checks/EnvExhaustivenessCheck.cs",
+      "line": 44,
+      "summary": "`FlattenJson` yields the empty string when `appsettings.json` is a non-object root (e.g., array or primitive), producing a spurious finding for an empty key.",
+      "failure_scenario": "If a developer accidentally commits `appsettings.json` containing just `[]` or `\"foo\"`, JsonDocument parses it fine and the root has `ValueKind != Object`, so line 44 yields `prefix == \"\"`. Line 23-24 puts an empty string into `settingsKeys`. Line 31 finds it missing from `envKeys` and reports `.env.example missing key for
+  \\`\\``. Either bail out cleanly on non-object roots or skip the yield."
+    },
+    {
+      "id": 10,
+      "status": "open",
+      "resolved_by": null,
+      "file": "tools/Quality.Cli/Commands/FmtCommand.cs",
+      "line": 12,
+      "summary": "`Process.Start(psi)!` suppresses the null-check; if `Process.Start` returns null (process reuse) the next line dereferences null.",
+      "failure_scenario": "`Process.Start(ProcessStartInfo)` is documented to return null when `UseShellExecute = true` and an existing process is reused. Here `UseShellExecute` defaults to true (no override), so a stale `dotnet format` handle could yield null → `p.WaitForExit()` throws NRE → CLR unhandled exception instead of a controlled exit code. Use the
+  same `ProcessRunner` pattern the rest of the codebase uses; `FmtCommand` is the lone exception."
+    },
+    {
+      "id": 11,
+      "status": "resolved",
+      "resolved_by": "81f1117 fix(install): splice before last </Project>, throw when absent (#7, #11)",
+      "file": "tools/Quality.Cli/Commands/InstallCommand.cs",
+      "line": 70,
+      "summary": "`text.Replace(\"</Project>\", injection, Ordinal)` replaces every occurrence of `</Project>` in the file, not just the closing tag.",
+      "failure_scenario": "If the target `Directory.Packages.props` contains a comment like `<!-- copied from </Project> root -->`, the literal substring inside the comment also gets replaced — producing invalid XML with the injection block emitted twice. Manipulating MSBuild XML by string substitution is fragile; either parse with `XDocument` or use a more
+  specific anchor (e.g., `</Project>\\n` at end-of-file)."
+    },
+    {
+      "id": 12,
+      "status": "open",
+      "resolved_by": null,
+      "file": "tools/Quality.Cli/Checks/LockfileIntegrityCheck.cs",
+      "line": 31,
+      "summary": "Entire captured stdout is added as a single finding string instead of split into lines.",
+      "failure_scenario": "When `dotnet restore --locked-mode` fails, stdout typically contains dozens of lines (one per project, plus NuGet diagnostics). Line 31 dumps the whole buffer as one element of `findings`. Spectre renders it as one giant error row — wrapped or truncated by terminal width — making the actual offending project hard to locate. Split on
+   newlines and add each non-empty line."
+    },
+    {
+      "id": 13,
+      "status": "open",
+      "resolved_by": null,
+      "file": "tests/ArchitectureTests/LayeringTests.cs",
+      "line": 25,
+      "summary": "`Assert.True(result.IsSuccessful)` omits the failure-message arg that the sibling test on line 15 includes.",
+      "failure_scenario": "When `Public_types_in_Sample_Lib_are_sealed_or_abstract` regresses (someone adds a public non-sealed/non-abstract type), the test reports only `Assert.True() Failure — Expected: True, Actual: False` — no list of failing type names. The fix is trivially: copy the `string.Join(\", \", result.FailingTypeNames ?? Array.Empty<string>())`
+   from line 15."
+    },
+    {
+      "id": 14,
+      "status": "open",
+      "resolved_by": null,
+      "file": "tools/Quality.Cli/Config/ConfigValidator.cs",
+      "line": 31,
+      "summary": "Validator accepts `threshold = 0` or negative values silently; combined with MaxLinesCheck's `lineCount > threshold`, a misconfigured threshold flips the check's semantics.",
+      "failure_scenario": "User writes `threshold = -1` in `.quality.toml` (typo for `100`). MaxLinesCheck.cs:21 evaluates `lineCount > -1` as true for every file — every .cs file is reported as exceeding max lines. The framework appears broken to the user, but the root cause is a config value that ConfigValidator never inspected. Add a `threshold <= 0`
+  rule."
+    },
+    {
+      "id": 15,
+      "status": "open",
+      "resolved_by": null,
+      "file": "tools/Quality.Cli/Commands/DoctorCommand.cs",
+      "line": 19,
+      "summary": "`Probe(\"docker\", ...)` is mandatory for `doctor` to return 0; local-only developers who never use the docker CI path are told the toolchain is broken.",
+      "failure_scenario": "A contributor on macOS without Docker Desktop runs `dotnet quality doctor` to verify their environment, and gets a non-zero exit because docker isn't installed — even though `dotnet quality pr-check` works perfectly natively (the docker-quality CI job is only one of two paths). Either soft-fail docker (warn but still return 0) or
+  split into `doctor --native` / `doctor --docker` modes."
+    }
+  ]
