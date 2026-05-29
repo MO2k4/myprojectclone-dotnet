@@ -7,17 +7,7 @@ internal static class RepoFileFilter
     public static bool IsExcludedSegment(string root, string path)
     {
         var rel = Path.GetRelativePath(root, path);
-        foreach (var segment in rel.Split(PathSeparators))
-        {
-            if (string.Equals(segment, "bin", StringComparison.Ordinal)
-                || string.Equals(segment, "obj", StringComparison.Ordinal)
-                || string.Equals(segment, "_fixtures", StringComparison.Ordinal))
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return rel.Split(PathSeparators).Any(segment => segment is "bin" or "obj" or "_fixtures");
     }
 
     public static IEnumerable<string> EnumerateFiles(string root, string pattern)
