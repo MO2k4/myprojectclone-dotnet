@@ -25,17 +25,32 @@ internal sealed class LockfileIntegrityCheck : ICheck
             return new CheckResult(this.Id, true, Array.Empty<string>());
         }
 
+        return new CheckResult(this.Id, false, SplitStreamsIntoLines(stdout, stderr));
+    }
+
+    // `dotnet restore --locked-mode` emits one diagnostic per offending project plus
+    // NuGet chatter. Adding the whole buffer as a single finding makes Spectre render it
+    // as one giant row that wraps/truncates to terminal width, burying the project that
+    // actually drifted. Split both streams into individual lines so each shows on its own
+    // row. Pure + internal so it can be unit-asserted without shelling out (the Run path
+    // stays ExcludeFromCodeCoverage).
+    internal static IReadOnlyList<string> SplitStreamsIntoLines(string stdout, string stderr)
+    {
         var findings = new List<string>();
-        if (stdout.Length > 0)
-        {
-            findings.Add(stdout);
-        }
+        AddNonEmptyLines(findings, stdout);
+        AddNonEmptyLines(findings, stderr);
+        return findings;
+    }
 
-        if (stderr.Length > 0)
+    private static void AddNonEmptyLines(List<string> findings, string stream)
+    {
+        foreach (var line in stream.Split('\n'))
         {
-            findings.Add(stderr);
+            var trimmed = line.TrimEnd('\r');
+            if (!string.IsNullOrWhiteSpace(trimmed))
+            {
+                findings.Add(trimmed);
+            }
         }
-
-        return new CheckResult(this.Id, false, findings);
     }
 }
