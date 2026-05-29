@@ -112,4 +112,46 @@ public class InstallCommandTests
             Directory.Delete(tmp, recursive: true);
         }
     }
+
+    [Fact]
+    public void Install_rerun_without_force_preserves_user_customization()
+    {
+        var tmp = Directory.CreateTempSubdirectory().FullName;
+        try
+        {
+            Assert.Equal(0, InstallCommand.Run(tmp));
+
+            var customized = Path.Combine(tmp, ".semgrep", "security.yml");
+            File.WriteAllText(customized, "# my custom rule\n");
+
+            Assert.Equal(0, InstallCommand.Run(tmp));
+
+            Assert.Equal("# my custom rule\n", File.ReadAllText(customized));
+        }
+        finally
+        {
+            Directory.Delete(tmp, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Install_with_force_overwrites_user_customization()
+    {
+        var tmp = Directory.CreateTempSubdirectory().FullName;
+        try
+        {
+            Assert.Equal(0, InstallCommand.Run(tmp));
+
+            var customized = Path.Combine(tmp, ".semgrep", "security.yml");
+            File.WriteAllText(customized, "# my custom rule\n");
+
+            Assert.Equal(0, InstallCommand.Run(tmp, force: true));
+
+            Assert.NotEqual("# my custom rule\n", File.ReadAllText(customized));
+        }
+        finally
+        {
+            Directory.Delete(tmp, recursive: true);
+        }
+    }
 }
