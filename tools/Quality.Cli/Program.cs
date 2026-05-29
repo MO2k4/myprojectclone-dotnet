@@ -43,10 +43,16 @@ internal static class Program
 
         var install = new Command("install", "Bootstrap a repo with the quality framework");
         var targetOpt = new Option<string>("--into", () => Directory.GetCurrentDirectory());
+        var forceOpt = new Option<bool>(
+            "--force",
+            () => false,
+            "Overwrite existing files with the framework's version");
         install.AddOption(targetOpt);
+        install.AddOption(forceOpt);
         install.SetHandler(
-            (string into) => Environment.Exit(Commands.InstallCommand.Run(into)),
-            targetOpt);
+            (into, force) => Environment.Exit(Commands.InstallCommand.Run(into, force)),
+            targetOpt,
+            forceOpt);
         root.AddCommand(install);
 
         return await root.InvokeAsync(args).ConfigureAwait(false);
