@@ -228,4 +228,24 @@ public class InstallCommandTests
             Directory.Delete(tmp, recursive: true);
         }
     }
+
+    [Fact]
+    public void Install_cleans_up_temp_file_when_a_write_fails()
+    {
+        var tmp = Directory.CreateTempSubdirectory().FullName;
+        try
+        {
+            // A directory occupying a target file path makes the atomic File.Move fail.
+            // The catch block must delete the temp sidecar and rethrow.
+            Directory.CreateDirectory(Path.Combine(tmp, "Directory.Build.props"));
+
+            Assert.ThrowsAny<IOException>(() => InstallCommand.Run(tmp));
+
+            Assert.False(File.Exists(Path.Combine(tmp, "Directory.Build.props.tmp-install")));
+        }
+        finally
+        {
+            Directory.Delete(tmp, recursive: true);
+        }
+    }
 }

@@ -141,12 +141,9 @@ internal static class InstallCommand
 
     private static void EnsurePackagesPropsClosingTag(string root)
     {
+        // Directory.Packages.props is always present here — the apply phase writes it
+        // (or preserves an existing one) before AutoAttach runs.
         var path = Path.Combine(root, "Directory.Packages.props");
-        if (!File.Exists(path))
-        {
-            return;
-        }
-
         var text = File.ReadAllText(path);
         if (text.LastIndexOf("</Project>", StringComparison.Ordinal) < 0)
         {
