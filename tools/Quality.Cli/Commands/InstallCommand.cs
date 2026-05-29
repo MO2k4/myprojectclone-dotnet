@@ -117,7 +117,18 @@ internal static class InstallCommand
 
     private static void AutoAttachSerilogAnalyzer(string root)
     {
-        foreach (var csproj in Directory.EnumerateFiles(root, "*.csproj", SearchOption.AllDirectories))
+        var csprojs = Directory.EnumerateFiles(root, "*.csproj", SearchOption.AllDirectories).ToList();
+        if (csprojs.Count == 0)
+        {
+            return;
+        }
+
+        // The MSBuild evaluation below transitively imports Directory.Packages.props.
+        // Validate it first so a malformed props yields a clear, actionable error
+        // instead of an opaque MSBuild import failure.
+        EnsurePackagesPropsClosingTag(root);
+
+        foreach (var csproj in csprojs)
         {
             var pkgs = ProjectInspector.PackageReferences(csproj);
             if (pkgs.Any(p => p.StartsWith("Serilog", StringComparison.OrdinalIgnoreCase)))
@@ -125,6 +136,21 @@ internal static class InstallCommand
                 AppendPackageVersionToPackagesProps(root, "SerilogAnalyzer", "0.15.0");
                 return;
             }
+        }
+    }
+
+    private static void EnsurePackagesPropsClosingTag(string root)
+    {
+        var path = Path.Combine(root, "Directory.Packages.props");
+        if (!File.Exists(path))
+        {
+            return;
+        }
+
+        var text = File.ReadAllText(path);
+        if (text.LastIndexOf("</Project>", StringComparison.Ordinal) < 0)
+        {
+            throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"'{path}' has no closing </Project> tag — cannot attach SerilogAnalyzer"));
         }
     }
 
@@ -137,10 +163,16 @@ internal static class InstallCommand
             return;
         }
 
+        var idx = text.LastIndexOf("</Project>", StringComparison.Ordinal);
+        if (idx < 0)
+        {
+            throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"'{path}' has no closing </Project> tag — cannot attach {id}"));
+        }
+
         var injection = string.Create(
             CultureInfo.InvariantCulture,
-            $"  <ItemGroup>\n    <GlobalPackageReference Include=\"{id}\" Version=\"{version}\" />\n  </ItemGroup>\n</Project>");
-        text = text.Replace("</Project>", injection, StringComparison.Ordinal);
+            $"  <ItemGroup>\n    <GlobalPackageReference Include=\"{id}\" Version=\"{version}\" />\n  </ItemGroup>\n");
+        text = string.Concat(text.AsSpan(0, idx), injection, text.AsSpan(idx));
         File.WriteAllText(path, text);
     }
 
