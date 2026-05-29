@@ -32,6 +32,15 @@ internal static class ConfigValidator
             {
                 yield return string.Create(CultureInfo.InvariantCulture, $"check '{id}' is disabled but has no `reason`. Add a non-empty reason in .quality.toml.");
             }
+
+            // A non-positive threshold is always a misconfiguration: checks compare with
+            // `lineCount > threshold`, so `threshold = 0` flags every non-empty file and a
+            // negative value (e.g. a typo of `-1` for `100`) flags every file outright. Catch
+            // it here rather than letting the check silently invert its own semantics.
+            if (entry.Threshold is <= 0)
+            {
+                yield return string.Create(CultureInfo.InvariantCulture, $"check '{id}' has threshold {entry.Threshold} in .quality.toml — threshold must be a positive integer.");
+            }
         }
     }
 }
