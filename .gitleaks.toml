@@ -5,5 +5,8 @@ useDefault = true
 
 [allowlist]
 description = "non-secret placeholders"
+# Path-scoped only. A global `regexes` allowlist here is OR'd with `paths`, so any
+# file containing the placeholder substring would be whitelisted repo-wide — a real
+# secret on a line that also says `// EXAMPLE_TOKEN_PLACEHOLDER` would slip through.
+# `.env.example` placeholders are already covered by the path entry below.
 paths = ['''\.env\.example$''', '''docs/.*''']
-regexes = ['''EXAMPLE_TOKEN_PLACEHOLDER''']
