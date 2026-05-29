@@ -27,8 +27,8 @@ v1 implementation complete. See [`docs/practices.md`](docs/practices.md) for the
   Roslyn analyzer NuGets (nullable, warnings-as-errors, `AnalysisMode=AllEnabledByDefault`).
 - A `dotnet quality` CLI tool (cross-platform C#) replacing bash hook scripts.
 - ~15 pre-commit hooks across 10 phases — only the checks Roslyn can't see
-  (secrets, supply-chain, duplication, architecture, sensitive-data logging,
-  env exhaustiveness, license compliance).
+  (secrets, supply-chain via osv-scanner + trivy, duplication, architecture,
+  sensitive-data logging, env exhaustiveness, license compliance).
 - Hybrid delivery: GitHub template for greenfield + `install.sh`/`install.ps1`
   for retrofit into existing solutions.
 - Strict defaults with documented per-check opt-out — every disable carries a
