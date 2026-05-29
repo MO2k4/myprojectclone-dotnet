@@ -8,14 +8,9 @@ if ! command -v dotnet >/dev/null || [ "$(dotnet --version)" != "$required_sdk" 
   export PATH="$HOME/.dotnet:$PATH"
 fi
 
-if [ ! -f .config/dotnet-tools.json ]; then
-  dotnet new tool-manifest --force
-fi
-
 # Pack the local CLI so `dotnet tool restore` can resolve dotnet-quality via the
 # local-artifacts feed configured in NuGet.config.
 dotnet pack tools/Quality.Cli/Quality.Cli.csproj -o ./artifacts -c Release
 
-dotnet tool install --local dotnet-quality --add-source ./artifacts 2>/dev/null || true
 dotnet tool restore
 dotnet quality install --into "$(pwd)"
